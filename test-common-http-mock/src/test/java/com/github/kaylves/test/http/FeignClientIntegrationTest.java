@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.kaylves.test.core.TestData.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -36,8 +37,8 @@ class FeignClientIntegrationTest extends BaseWireMock {
                 .response(user(1, "Alice", "alice@example.com"));
 
         Map<String, Object> result = client.getUser(1L);
-        assertField(result, "name", "Alice");
-        assertField(result, "email", "alice@example.com");
+        assertThat(result.get("name")).isEqualTo("Alice");
+        assertThat(result.get("email")).isEqualTo("alice@example.com");
     }
 
     @Test
@@ -47,9 +48,9 @@ class FeignClientIntegrationTest extends BaseWireMock {
                 .response(Arrays.asList(user(1, "Alice", null), user(2, "Bob", null)));
 
         List<Map<String, Object>> users = client.listUsers();
-        assertListSize(users, 2);
-        assertField(users.get(0), "name", "Alice");
-        assertField(users.get(1), "name", "Bob");
+        assertThat(users).hasSize(2);
+        assertThat(users.get(0).get("name")).isEqualTo("Alice");
+        assertThat(users.get(1).get("name")).isEqualTo("Bob");
     }
 
     @Test
@@ -79,8 +80,8 @@ class FeignClientIntegrationTest extends BaseWireMock {
                 .response(user(3, "Charlie", "charlie@example.com"));
 
         Map<String, Object> result = client.createUser(user(null, "Charlie", "charlie@example.com"));
-        assertField(result, "id", 3);
-        assertField(result, "name", "Charlie");
+        assertThat(result.get("id")).isEqualTo(3);
+        assertThat(result.get("name")).isEqualTo("Charlie");
     }
 
     @Test
@@ -100,7 +101,7 @@ class FeignClientIntegrationTest extends BaseWireMock {
                 .response(user(1, "Alice Updated", "alice@example.com"));
 
         Map<String, Object> result = client.updateUser(1L, map("name", "Alice Updated"));
-        assertField(result, "name", "Alice Updated");
+        assertThat(result.get("name")).isEqualTo("Alice Updated");
     }
 
     @Test
@@ -110,7 +111,7 @@ class FeignClientIntegrationTest extends BaseWireMock {
                 .response(message("deleted"));
 
         Map<String, Object> result = client.deleteUser(1L);
-        assertField(result, "message", "deleted");
+        assertThat(result.get("message")).isEqualTo("deleted");
     }
 
     // ==================== Form ====================
@@ -125,8 +126,8 @@ class FeignClientIntegrationTest extends BaseWireMock {
         form.put("name", "Dave");
         form.put("email", "dave@example.com");
         Map<String, Object> result = client.createUserForm(form);
-        assertField(result, "id", 4);
-        assertField(result, "name", "Dave");
+        assertThat(result.get("id")).isEqualTo(4);
+        assertThat(result.get("name")).isEqualTo("Dave");
     }
 
     // ==================== XML ====================

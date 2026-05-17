@@ -17,11 +17,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
+import static com.github.kaylves.test.core.TestData.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class
-RestTemplateIntegrationTest extends BaseWireMock {
+class RestTemplateIntegrationTest extends BaseWireMock {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private RestTemplate restTemplate;

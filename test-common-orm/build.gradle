@@ -1,0 +1,12 @@
+// Parent module for ORM test utilities (JPA, MyBatis)
+subprojects {
+    dependencies {
+        api project(':test-common-core')
+        api "org.junit.jupiter:junit-jupiter:${junitJupiterVersion}"
+        api "org.mockito:mockito-core:${mockitoVersion}"
+        api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+        api "org.assertj:assertj-core:${assertjVersion}"
+
+        compileOnly "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    }
+}

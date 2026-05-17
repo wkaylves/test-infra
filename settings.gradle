@@ -1,6 +1,10 @@
 rootProject.name = 'test-common'
 
 include 'test-common-core'
+include 'test-common-spring-mvc'
+include 'test-common-orm'
+include 'test-common-orm:test-common-jpa'
+include 'test-common-orm:test-common-mybatis'
 include 'test-common-junit5'
 include 'test-common-spock'
 include 'test-common-storage-rdbms'

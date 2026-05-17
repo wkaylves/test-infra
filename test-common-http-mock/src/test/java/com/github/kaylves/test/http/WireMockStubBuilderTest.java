@@ -16,6 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.kaylves.test.core.TestData.error;
+import static com.github.kaylves.test.core.TestData.map;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,18 +190,6 @@ class WireMockStubBuilderTest extends WireMockTestBase {
         Map<String, Object> m = new HashMap<>();
         if (id != null) m.put("id", id);
         if (name != null) m.put("name", name);
-        return m;
-    }
-
-    private static Map<String, Object> error(String message) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("error", message);
-        return m;
-    }
-
-    private static Map<String, Object> map(String key, Object value) {
-        Map<String, Object> m = new HashMap<>();
-        m.put(key, value);
         return m;
     }
 }

@@ -2,7 +2,7 @@ package com.github.kaylves.test.example.service;
 
 import com.github.kaylves.test.example.model.Order;
 import com.github.kaylves.test.example.repository.OrderRepository;
-import com.github.kaylves.test.junit5.BaseServiceTestBase;
+import com.github.kaylves.test.spring.mvc.BaseServiceTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-class OrderServiceTest extends BaseServiceTestBase {
+class OrderServiceTest extends BaseServiceTest {
 
     @Mock
     private OrderRepository orderRepository;

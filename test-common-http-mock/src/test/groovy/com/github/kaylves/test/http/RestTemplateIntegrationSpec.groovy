@@ -8,6 +8,8 @@ import org.springframework.http.MediaType
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 
+import static com.github.kaylves.test.core.TestData.*
+
 class RestTemplateIntegrationSpec extends BaseWireMockSpec {
 
     private static final ObjectMapper MAPPER = new ObjectMapper()

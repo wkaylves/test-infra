@@ -59,32 +59,4 @@ abstract class BaseWireMockSpec extends Specification {
     protected StubDef stubPatch(String url) {
         delegate.stubPatch(url)
     }
-
-    // ==================== 数据构造 ====================
-
-    protected Map<String, Object> user(Integer id, String name, String email) {
-        delegate.user(id, name, email)
-    }
-
-    protected Map<String, Object> error(String msg) {
-        delegate.error(msg)
-    }
-
-    protected Map<String, Object> message(String msg) {
-        delegate.message(msg)
-    }
-
-    protected Map<String, Object> map(String key, Object value) {
-        delegate.map(key, value)
-    }
-
-    // ==================== 断言 ====================
-
-    protected void assertField(Map<String, Object> data, String field, Object expected) {
-        delegate.assertField(data, field, expected)
-    }
-
-    protected void assertListSize(List<?> list, int expectedSize) {
-        delegate.assertListSize(list, expectedSize)
-    }
 }

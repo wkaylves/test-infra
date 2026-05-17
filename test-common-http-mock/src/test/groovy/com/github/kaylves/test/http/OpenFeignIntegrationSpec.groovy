@@ -2,6 +2,8 @@ package com.github.kaylves.test.http
 
 import feign.FeignException
 
+import static com.github.kaylves.test.core.TestData.*
+
 class OpenFeignIntegrationSpec extends BaseWireMockSpec {
 
     private UserSpringFeignClient client
