@@ -1,0 +1,13 @@
+dependencies {
+    api project(':test-common-core')
+    api project(':test-common-junit5')
+    api project(':test-common-spock')
+    api project(':test-common-storage-rdbms')
+    api project(':test-common-storage-nosql')
+    api project(':test-common-storage-search')
+    api project(':test-common-storage-file')
+    api project(':test-common-mq-broker')
+    api project(':test-common-http-mock')
+    api project(':test-common-rpc-mock')
+    api project(':test-common-schedule-mock')
+}

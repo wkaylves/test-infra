@@ -1,0 +1,10 @@
+dependencies {
+    api project(':test-common-core')
+    api project(':test-common-junit5')
+    api "org.testcontainers:elasticsearch:${testcontainersVersion}"
+    api "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+
+    compileOnly "org.springframework.boot:spring-boot-starter-data-elasticsearch:${springBootVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+}

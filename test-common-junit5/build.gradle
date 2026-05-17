@@ -1,0 +1,14 @@
+dependencies {
+    api project(':test-common-core')
+    api "org.junit.jupiter:junit-jupiter:${junitJupiterVersion}"
+    api "org.mockito:mockito-core:${mockitoVersion}"
+    api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+    api "org.assertj:assertj-core:${assertjVersion}"
+
+    compileOnly "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    compileOnly "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    compileOnly "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+}

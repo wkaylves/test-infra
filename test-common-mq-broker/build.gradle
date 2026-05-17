@@ -1,0 +1,18 @@
+dependencies {
+    api project(':test-common-core')
+    api project(':test-common-junit5')
+    api "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+
+    api "org.testcontainers:rabbitmq:${testcontainersVersion}"
+    api "org.testcontainers:kafka:${testcontainersVersion}"
+
+    compileOnly "org.springframework.boot:spring-boot-starter-amqp:${springBootVersion}"
+    compileOnly "org.springframework.kafka:spring-kafka:2.9.13"
+    compileOnly "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketmqSpringBootVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketmqSpringBootVersion}"
+    testImplementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
+    testImplementation "org.spockframework:spock-spring:${spockVersion}"
+}

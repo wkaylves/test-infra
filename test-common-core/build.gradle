@@ -1,0 +1,8 @@
+dependencies {
+    api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    api "com.jayway.jsonpath:json-path:2.8.0"
+
+    api "org.springframework.data:spring-data-commons:${springBootVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+}
