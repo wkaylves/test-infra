@@ -1,0 +1,22 @@
+dependencies {
+    implementation project(':test-infra-core')
+    implementation project(':test-infra-junit5')
+    implementation project(':test-infra-spock')
+    implementation project(':test-infra-storage-rdbms')
+    implementation project(':test-infra-storage-nosql')
+    implementation project(':test-infra-mq-broker')
+    implementation project(':test-infra-http-mock')
+    implementation project(':test-infra-schedule-mock')
+
+    implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    implementation "org.mybatis.spring.boot:mybatis-spring-boot-starter:${mybatisSpringBootVersion}"
+    implementation "mysql:mysql-connector-java:8.0.33"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    testImplementation "org.spockframework:spock-spring:${spockVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "org.testcontainers:mysql:${testcontainersVersion}"
+}

@@ -1,5 +1,7 @@
 # test-common
 
+[English](README_EN.md)
+
 统一测试基座（Test Infrastructure Platform）—— 为团队常见测试场景提供标准路径、默认配置、测试数据工具和外部依赖隔离能力。
 
 `test-common` 不替代 JUnit5、Spock、Mockito、Spring Test 或 Testcontainers。它的职责是把团队认可的测试写法沉淀成可复用组件，让新增测试用例时更容易选对测试层次、隔离外部依赖，并保持一致的断言与数据构造风格。

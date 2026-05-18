@@ -1,0 +1,6 @@
+// Aggregator module — pulls in spring-mvc, jpa, and mybatis modules transitively
+dependencies {
+    api project(':test-infra-spring-mvc')
+    api project(':test-infra-orm:test-infra-jpa')
+    api project(':test-infra-orm:test-infra-mybatis')
+}

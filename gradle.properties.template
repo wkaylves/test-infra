@@ -1,0 +1,18 @@
+# Maven Central Publishing Configuration
+# Copy this file to gradle.properties and fill in your credentials
+# DO NOT commit gradle.properties to version control
+
+# Sonatype OSSRH credentials
+# Register at https://issues.sonatype.org/ and create a JIRA ticket for your project
+ossrhUsername=your_sonatype_username
+ossrhPassword=your_sonatype_password
+
+# GPG/PGP signing configuration
+# Generate a GPG key: gpg --gen-key
+# Export the key: gpg --export-secret-keys YOUR_KEY_ID | base64
+signing.key=your_gpg_private_key_base64
+signing.password=your_gpg_passphrase
+
+# GitHub Packages credentials (optional)
+gpr.user=your_github_username
+gpr.key=your_github_token

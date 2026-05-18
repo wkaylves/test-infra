@@ -1,0 +1,20 @@
+dependencies {
+    api project(':test-infra-core')
+    api "org.testcontainers:mysql:${testcontainersVersion}"
+    api "org.testcontainers:postgresql:${testcontainersVersion}"
+    api "org.testcontainers:clickhouse:${testcontainersVersion}"
+    api "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+
+    compileOnly "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    compileOnly "org.mybatis.spring.boot:mybatis-spring-boot-starter:${mybatisSpringBootVersion}"
+    compileOnly "mysql:mysql-connector-java:8.0.33"
+    compileOnly "org.postgresql:postgresql:42.6.0"
+    compileOnly "com.clickhouse:clickhouse-jdbc:0.4.6"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+    testImplementation "mysql:mysql-connector-java:8.0.33"
+    testImplementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
+    testImplementation "org.spockframework:spock-spring:${spockVersion}"
+}

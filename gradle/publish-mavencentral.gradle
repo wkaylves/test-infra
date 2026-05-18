@@ -1,0 +1,120 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+// Maven Central requires these metadata
+ext {
+    pomUrl = 'https://github.com/kaylves/test-infra'
+    pomDescription = 'A comprehensive test infrastructure platform for Java/Spring applications'
+    pomLicenseName = 'The Apache License, Version 2.0'
+    pomLicenseUrl = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+    pomDeveloperId = 'kaylves'
+    pomDeveloperName = 'kaylves'
+    pomDeveloperEmail = 'kaylves@users.noreply.github.com'
+    pomScmUrl = 'https://github.com/kaylves/test-infra'
+    pomScmConnection = 'scm:git:git://github.com/kaylves/test-infra.git'
+    pomScmDeveloperConnection = 'scm:git:ssh://github.com/kaylves/test-infra.git'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
+
+            pom {
+                name = project.name
+                description = pomDescription
+                url = pomUrl
+                inceptionYear = '2024'
+
+                licenses {
+                    license {
+                        name = pomLicenseName
+                        url = pomLicenseUrl
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = pomDeveloperId
+                        name = pomDeveloperName
+                        email = pomDeveloperEmail
+                    }
+                }
+
+                scm {
+                    url = pomScmUrl
+                    connection = pomScmConnection
+                    developerConnection = pomScmDeveloperConnection
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            url = version.endsWith('SNAPSHOT')
+                    ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                    : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+
+            credentials {
+                username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME") ?: ""
+                password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD") ?: ""
+            }
+        }
+
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kaylves/test-infra")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME") ?: ""
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
+    }
+}
+
+signing {
+    // Use GPG key for signing
+    def signingKey = findProperty("signing.key") ?: System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = findProperty("signing.password") ?: System.getenv("GPG_SIGNING_PASSWORD")
+
+    if (signingKey) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+
+    sign publishing.publications.maven
+}
+
+// Task to publish to Maven Central (OSSRH)
+tasks.register('publishToMavenCentral') {
+    group = 'publishing'
+    description = 'Publishes all artifacts to Maven Central via OSSRH'
+    dependsOn tasks.named('publishMavenPublicationToOSSRHRepository')
+}
+
+// Task to publish SNAPSHOT to Maven Central
+tasks.register('publishSnapshotToMavenCentral') {
+    group = 'publishing'
+    description = 'Publishes SNAPSHOT artifacts to Maven Central snapshots'
+    dependsOn tasks.named('publishMavenPublicationToOSSRHRepository')
+}
+
+// Task to release to Maven Central (after staging)
+tasks.register('releaseToMavenCentral') {
+    group = 'publishing'
+    description = 'Releases staged artifacts to Maven Central'
+    doLast {
+        println "To release staged artifacts, visit: https://s01.oss.sonatype.org/"
+        println "Or use the Nexus Staging plugin for automated release."
+    }
+}
