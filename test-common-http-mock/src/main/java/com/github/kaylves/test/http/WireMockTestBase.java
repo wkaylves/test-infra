@@ -28,30 +28,41 @@ public abstract class WireMockTestBase {
     protected abstract void setupStubs();
 
     protected String getBaseUrl() {
-        return wireMockServer.baseUrl();
+        return getWireMockServer().baseUrl();
     }
 
     protected int getPort() {
-        return wireMockServer.port();
+        return getWireMockServer().port();
+    }
+
+    protected WireMockServer getWireMockServer() {
+        if (wireMockServer == null || !wireMockServer.isRunning()) {
+            throw new IllegalStateException("WireMock server is not running.");
+        }
+        return wireMockServer;
+    }
+
+    protected WireMockStubBuilder wireMock() {
+        return WireMockStubBuilder.on(getWireMockServer());
     }
 
     protected StubDef stubGet(String url) {
-        return new StubDef(wireMockServer, url, "GET");
+        return new StubDef(getWireMockServer(), url, "GET");
     }
 
     protected StubDef stubPost(String url) {
-        return new StubDef(wireMockServer, url, "POST");
+        return new StubDef(getWireMockServer(), url, "POST");
     }
 
     protected StubDef stubPut(String url) {
-        return new StubDef(wireMockServer, url, "PUT");
+        return new StubDef(getWireMockServer(), url, "PUT");
     }
 
     protected StubDef stubDelete(String url) {
-        return new StubDef(wireMockServer, url, "DELETE");
+        return new StubDef(getWireMockServer(), url, "DELETE");
     }
 
     protected StubDef stubPatch(String url) {
-        return new StubDef(wireMockServer, url, "PATCH");
+        return new StubDef(getWireMockServer(), url, "PATCH");
     }
 }

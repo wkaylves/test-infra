@@ -1,69 +1,81 @@
 package com.github.kaylves.test.http;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 
 public class StubDef {
 
-    private final WireMockServer server;
-    private final String url;
-    private final String method;
-    private int status = 200;
-    private String responseBody;
-    private String requestBody;
+    private final WireMockStubBuilder.Stub delegate;
 
     StubDef(WireMockServer server, String url, String method) {
-        this.server = server;
-        this.url = url;
-        this.method = method;
+        this.delegate = WireMockStubBuilder.on(server).request(method, url);
     }
 
     public StubDef body(String body) {
-        this.responseBody = body;
+        delegate.withBody(body);
+        return this;
+    }
+
+    public StubDef jsonBody(Object body) {
+        delegate.withJsonBody(body);
+        return this;
+    }
+
+    public StubDef textBody(String body) {
+        delegate.withTextBody(body);
+        return this;
+    }
+
+    public StubDef xmlBody(String body) {
+        delegate.withXmlBody(body);
         return this;
     }
 
     public StubDef status(int status) {
-        this.status = status;
+        delegate.withStatus(status);
         return this;
     }
 
     public StubDef requestBody(String body) {
-        this.requestBody = body;
+        delegate.withJsonRequestBody(body);
+        return this;
+    }
+
+    public StubDef rawRequestBody(String body) {
+        delegate.withRequestBody(body);
+        return this;
+    }
+
+    public StubDef jsonRequestBody(Object body) {
+        delegate.withJsonRequestBody(body);
+        return this;
+    }
+
+    public StubDef header(String name, String value) {
+        delegate.withHeader(name, value);
+        return this;
+    }
+
+    public StubDef contentType(String contentType) {
+        delegate.withContentType(contentType);
+        return this;
+    }
+
+    public StubDef requestHeader(String name, String value) {
+        delegate.withRequestHeader(name, value);
+        return this;
+    }
+
+    public StubDef queryParam(String name, String value) {
+        delegate.withQueryParam(name, value);
+        return this;
+    }
+
+    public StubDef fixedDelay(int milliseconds) {
+        delegate.withFixedDelay(milliseconds);
         return this;
     }
 
     public void stub() {
-        WireMockStubBuilder builder = WireMockStubBuilder.on(server);
-        switch (method) {
-            case "GET":
-                WireMockStubBuilder.GetStubBuilder getBuilder = builder.get(url).withStatus(status);
-                if (responseBody != null) getBuilder.withBody(responseBody);
-                getBuilder.stub();
-                break;
-            case "POST":
-                WireMockStubBuilder.PostStubBuilder postBuilder = builder.post(url).withStatus(status);
-                if (requestBody != null) postBuilder.withRequestBody(requestBody);
-                if (responseBody != null) postBuilder.withResponseBody(responseBody);
-                postBuilder.stub();
-                break;
-            case "PUT":
-                WireMockStubBuilder.PutStubBuilder putBuilder = builder.put(url).withStatus(status);
-                if (requestBody != null) putBuilder.withRequestBody(requestBody);
-                if (responseBody != null) putBuilder.withResponseBody(responseBody);
-                putBuilder.stub();
-                break;
-            case "DELETE":
-                WireMockStubBuilder.DeleteStubBuilder deleteBuilder = builder.delete(url).withStatus(status);
-                if (responseBody != null) deleteBuilder.withBody(responseBody);
-                deleteBuilder.stub();
-                break;
-            case "PATCH":
-                WireMockStubBuilder.PatchStubBuilder patchBuilder = builder.patch(url).withStatus(status);
-                if (requestBody != null) patchBuilder.withRequestBody(requestBody);
-                if (responseBody != null) patchBuilder.withResponseBody(responseBody);
-                patchBuilder.stub();
-                break;
-        }
+        delegate.stub();
     }
 }

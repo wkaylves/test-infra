@@ -1,77 +1,90 @@
-# 一次性评审完整清单
+# test-common 评审清单
 
-基于七轮评审（251 个问题）反推的系统性审查清单。逐文件逐项打勾，全部通过后再提交。
+本清单用于评审 `test-common` 的文档、模块边界、测试基础设施和代码质量。核心原则：**以代码为准，组件能力归属组件模块，文档示例必须可运行**。
 
-## 环境
+## 1. 模块职责
 
-- **Java**: `/Users/kaylves/Library/Java/JavaVirtualMachines/temurin-18.0.2.1/Contents/Home`
-- **Maven**: `/Users/kaylves/java/apache-maven-3.5.3-bin/apache-maven-3.5.3`
-- **Maven 启动**:
-  ```bash
-  export MAVEN_HOME=/Users/kaylves/java/apache-maven-3.5.3-bin/apache-maven-3.5.3 && export PATH="$MAVEN_HOME/bin:$PATH"
-  ```
+- [ ] 新能力是否放在所属组件模块，而不是塞入 `test-common-junit5` 或 `test-common-spock`
+- [ ] `test-common-junit5` 是否只包含纯 JUnit5 能力，不引入 Spring MVC、MyBatis、ES、MQ、RPC 等组件依赖
+- [ ] `test-common-spock` 是否只包含纯 Spock 能力，不引入组件级 Spring/Testcontainers 配置
+- [ ] `test-common-all` 是否只做依赖聚合，不新增基类、工具类或配置
+- [ ] `test-common-example` 是否只作为样例，不被业务项目直接依赖
+- [ ] 新增组件是否在 `docs/design.md` 的职责表中补充边界
 
----
+## 2. 文档真实性
 
-## 1. 构建与依赖
-- [ ] pom.xml 依赖版本是否统一（dependencyManagement）
-- [ ] 有无废弃依赖（mysql:mysql-connector-java → com.mysql:mysql-connector-j）
-- [ ] 有无未使用的依赖
-- [ ] 有无硬编码版本号（应由 BOM 管理）
-- [ ] 插件版本是否集中管理（pluginManagement）
-- [ ] 测试依赖是否 scope=test
-- [ ] spring-boot-maven-plugin 是否多余（非可执行模块）
-- [ ] maven-failsafe-plugin 是否配置（integration 测试）
+- [ ] README 中出现的类名、注解、模块名是否都能在当前代码中找到
+- [ ] README 是否按测试场景推荐组件，而不是先推荐 JUnit5/Spock 大入口
+- [ ] 文档是否避免使用尚未落地的目标态 API
+- [ ] 示例依赖坐标是否与 Gradle 模块名一致
+- [ ] 每个推荐测试路径是否有对应测试或 example
+- [ ] 历史评审文档是否没有被误用为当前 API 说明
 
-## 2. 资源管理（JDBC/IO/Process）
-- [ ] 所有 Connection/Statement/ResultSet 是否 try-with-resources
-- [ ] Process 是否有超时 + destroyForcibly
-- [ ] InterruptedException 是否恢复中断状态（Thread.currentThread().interrupt()）
-- [ ] 异常链是否保留（addSuppressed）
-- [ ] DCL 单例是否先 start() 后赋值（防半初始化泄漏）
+## 3. 测试路径
 
-## 3. 类型安全
-- [ ] 泛型方法是否遮蔽类级泛型
-- [ ] 返回值是否 raw type（应加泛型）
-- [ ] instanceof 检查是否在 ClassCastException 风险点前做
-- [ ] 数字比较是否处理跨类型（Integer vs Long → BigDecimal）
-- [ ] BigDecimal 转换是否处理 Infinity/NaN
-- [ ] JSON 反序列化是否处理 Map → Object 路径
+- [ ] Service 单测是否默认不启动 Spring 容器
+- [ ] 纯 Mockito 场景是否优先使用原生 JUnit5 + Mockito，而不是无价值包装
+- [ ] Controller 测试是否归属 `test-common-spring-mvc`
+- [ ] Mapper/DAO 测试是否归属 `test-common-orm:test-common-mybatis` 或 `test-common-orm:test-common-jpa`
+- [ ] HTTP 依赖隔离是否归属 `test-common-http-mock`
+- [ ] MQ/RPC/调度/存储能力是否归属对应组件模块
+- [ ] JUnit5 与 Spock 双入口是否放在同一个组件模块中维护
 
-## 4. 输入校验
-- [ ] 所有 public 方法的 String 参数是否 null/empty 检查
-- [ ] 数值参数是否 null/负数/零 检查
-- [ ] 校验失败是否抛 IllegalArgumentException（不是静默返回错误结果）
+## 4. 依赖边界
 
-## 5. 并发与事务
-- [ ] @Transactional 方法内是否有 MQ 发送（回滚后消息已发）
-- [ ] 订单号等唯一标识是否并发安全（UUID，非自增）
-- [ ] 缓存操作是否与 DB 操作一致（缓存回填、删除）
+- [ ] `api` / `implementation` / `compileOnly` / `testImplementation` 是否符合消费者需要
+- [ ] 基础模块是否避免引入重型组件依赖
+- [ ] 组件模块是否只暴露使用者真正需要的依赖
+- [ ] 版本号是否集中在根 `build.gradle` 的 `ext` 中
+- [ ] 是否避免把 Spring Boot starter 扩散到无 Spring 职责的模块
+- [ ] `test-common-all` 是否没有制造新的传递依赖语义
 
-## 6. 可见性与封装
-- [ ] 子类需要的方法是否 protected（不是 package-private）
-- [ ] 不应暴露的方法是否 private（如容器 start()）
-- [ ] Builder 的 varargs 是否返回 unmodifiableList
+## 5. 共享状态与并发
 
-## 7. 测试覆盖
-- [ ] 每个 Service 方法是否有正向测试
-- [ ] 每个 Service 方法是否有负向测试（null/empty/非法状态）
-- [ ] 缓存命中/未命中/DB-null 三种路径是否都测到
-- [ ] Map 反序列化路径是否测到
-- [ ] 边界值是否测到（空列表、零值、负数）
+- [ ] 静态缓存是否有清理机制
+- [ ] 静态 server/container 是否不会在并行测试中串扰
+- [ ] 按方法名缓存 stub 是否能处理重载方法或同名方法
+- [ ] Testcontainers 单例是否不会因首次调用锁死错误配置
+- [ ] System properties 是否会污染其他测试
+- [ ] 生命周期方法是否支持重复 start/stop 或清晰声明不支持
 
-## 8. 测试基础设施
-- [ ] Mock 方法参数是否与实际调用一致（eq() vs any()）
-- [ ] Spock stub 是否在 given: 块（不是 then: 块）
-- [ ] @Mock 是否在 Mockito 生命周期内（@ExtendWith）
-- [ ] 测试资源文件是否在 src/test/resources（不是 src/main）
+## 6. 容器与外部依赖
 
-## 9. 异常处理
-- [ ] catch 块是否吞异常（至少 log 或 addSuppressed）
-- [ ] finally 块是否清理资源
-- [ ] 容器 stop() 失败是否影响原始异常
+- [ ] 容器默认镜像、库名、用户名、密码是否可配置
+- [ ] Spring 测试是否优先使用 `DynamicPropertySource` 注入动态端口
+- [ ] 容器 stop 策略是否明确，是复用、延迟停止还是交给 JVM 退出
+- [ ] 外部依赖 mock 是否支持常见状态码、请求体、响应体、header
+- [ ] HTTP mock 是否区分 JSON、XML、text、form 等内容类型
+- [ ] MQ/RPC mock 是否只模拟基础交互，不隐含业务语义
 
-## 10. 序列化与兼容
-- [ ] 缓存对象是否实现 Serializable
-- [ ] RocketMQ topic 名是否合法（无冒号等特殊字符）
-- [ ] SQL 表名是否有正则校验（防注入）
+## 7. 类型安全与输入校验
+
+- [ ] public API 是否校验 null、empty、非法数字
+- [ ] 泛型是否避免 raw type
+- [ ] builder 的集合返回是否避免被外部意外修改
+- [ ] JSON path 读取是否清晰处理缺失路径和类型转换
+- [ ] 反射解析注解时是否保留可诊断错误，避免静默失败造成误判
+
+## 8. 测试覆盖
+
+- [ ] 每个核心工具类是否有正向和异常路径测试
+- [ ] 每个推荐测试路径是否有最小可运行样例
+- [ ] JUnit5 与 Spock 入口是否分别有覆盖
+- [ ] 容器类是否至少有不依赖 Docker 的结构测试，Docker 路径单独标记
+- [ ] 文档示例是否能被现有测试或 example 间接验证
+
+## 9. 构建验证
+
+- [ ] `./gradlew testClasses --continue` 是否通过
+- [ ] `./gradlew test --continue` 是否通过
+- [ ] 是否记录 Gradle deprecation warning 中需要后续处理的问题
+- [ ] 新增模块是否在 `settings.gradle` 中声明
+- [ ] 新增文档是否不引用不存在的文件或类
+
+## 10. 代码维护性
+
+- [ ] 基类是否提供真实团队约定，而不是只包一层框架注解
+- [ ] 工具类是否保持小而明确，不承载业务逻辑
+- [ ] 注释是否解释约束和边界，而不是重复代码
+- [ ] 不同组件是否避免复制粘贴式 builder，可抽象时是否已有真实重复
+- [ ] 命名是否直接表达测试场景，例如 `BaseH2MapperTest`、`BaseWireMockSpec`

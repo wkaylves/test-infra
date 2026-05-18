@@ -2,12 +2,14 @@ package com.github.kaylves.test.http;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kaylves.test.http.feign.FeignClientContractStrategy;
+import com.github.kaylves.test.http.feign.FeignMethodMeta;
+import com.github.kaylves.test.http.feign.NativeFeignContractStrategy;
+import com.github.kaylves.test.http.openfeign.SpringCloudOpenFeignContractStrategy;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import feign.Feign;
-import feign.Param;
-import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.DecodeException;
@@ -15,179 +17,156 @@ import feign.codec.Decoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FeignClientStubber<T> {
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    private static final String[][] MVC_MAPPINGS = {
-            {"org.springframework.web.bind.annotation.GetMapping", "GET"},
-            {"org.springframework.web.bind.annotation.PostMapping", "POST"},
-            {"org.springframework.web.bind.annotation.PutMapping", "PUT"},
-            {"org.springframework.web.bind.annotation.DeleteMapping", "DELETE"},
-            {"org.springframework.web.bind.annotation.PatchMapping", "PATCH"},
-    };
+    private static final List<FeignClientContractStrategy> CONTRACT_STRATEGIES = Arrays.asList(
+            new NativeFeignContractStrategy(),
+            new SpringCloudOpenFeignContractStrategy()
+    );
 
     private final Class<T> clientClass;
     private final WireMockServer server;
-    private final Map<String, MethodMeta> metaMap = new HashMap<>();
-    private final Map<String, ResponseSpec> pendingResponses = new HashMap<>();
+    private final Map<Method, FeignMethodMeta> metaMap = new HashMap<>();
+    private final Map<String, Method> methodsByName = new HashMap<>();
+    private final Set<String> overloadedMethodNames = new HashSet<>();
+    private final Map<Method, ResponseSpec> pendingResponses = new ConcurrentHashMap<>();
     private final T realClient;
 
     public FeignClientStubber(Class<T> clientClass, WireMockServer server) {
+        if (clientClass == null) {
+            throw new IllegalArgumentException("Feign client class must not be null.");
+        }
+        if (server == null) {
+            throw new IllegalArgumentException("WireMockServer must not be null.");
+        }
         this.clientClass = clientClass;
         this.server = server;
 
-        boolean hasMvcAnnotations = false;
-
-        for (Method m : clientClass.getMethods()) {
-            // Try raw Feign @RequestLine first
-            RequestLine rl = m.getAnnotation(RequestLine.class);
-            if (rl != null) {
-                String[] parts = rl.value().split("\\s+", 2);
-                Map<Integer, String> paramIndex = new HashMap<>();
-                Annotation[][] paramAnnotations = m.getParameterAnnotations();
-                for (int i = 0; i < paramAnnotations.length; i++) {
-                    for (Annotation ann : paramAnnotations[i]) {
-                        if (ann instanceof Param) {
-                            paramIndex.put(i, ((Param) ann).value());
-                            break;
-                        }
-                    }
-                }
-                metaMap.put(m.getName(), new MethodMeta(m, parts[0], parts[1], paramIndex));
-                continue;
-            }
-
-            // Try Spring MVC annotations via reflection
-            MethodMeta mvcMeta = parseSpringMvcMethod(m);
-            if (mvcMeta != null) {
-                metaMap.put(m.getName(), mvcMeta);
-                hasMvcAnnotations = true;
-            }
-        }
-
-        feign.Feign.Builder builder = Feign.builder()
+        FeignClientContractStrategy selectedStrategy = parseClientMethods(clientClass);
+        Feign.Builder builder = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder());
-
-        if (hasMvcAnnotations) {
-            try {
-                Class<?> contractClass = Class.forName("org.springframework.cloud.openfeign.support.SpringMvcContract");
-                builder.contract((feign.Contract) contractClass.newInstance());
-            } catch (Exception e) {
-                // SpringMvcContract not available, fall back to default
-            }
+        if (selectedStrategy != null) {
+            selectedStrategy.configure(builder);
         }
-
         this.realClient = builder.target(clientClass, server.baseUrl());
     }
 
-    private MethodMeta parseSpringMvcMethod(Method m) {
-        for (String[] mapping : MVC_MAPPINGS) {
-            Annotation ann = findAnnotation(m, mapping[0]);
-            if (ann != null) {
-                String url = extractAnnotationValue(ann);
-                if (url == null) continue;
-
-                String httpMethod = mapping[1];
-                Map<Integer, String> paramIndex = new HashMap<>();
-                Annotation[][] paramAnnotations = m.getParameterAnnotations();
-                for (int i = 0; i < paramAnnotations.length; i++) {
-                    for (Annotation pa : paramAnnotations[i]) {
-                        if (pa.annotationType().getName().equals("org.springframework.web.bind.annotation.PathVariable")) {
-                            String name = extractAnnotationValue(pa);
-                            if (name != null) {
-                                paramIndex.put(i, name);
-                            }
-                            break;
-                        }
-                    }
-                }
-                return new MethodMeta(m, httpMethod, url, paramIndex);
-            }
-        }
-        return null;
-    }
-
-    private Annotation findAnnotation(Method m, String annotationClassName) {
-        for (Annotation ann : m.getAnnotations()) {
-            if (ann.annotationType().getName().equals(annotationClassName)) {
-                return ann;
-            }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private String extractAnnotationValue(Annotation ann) {
-        try {
-            // Try "value" first, then "path"
-            try {
-                Object val = ann.annotationType().getMethod("value").invoke(ann);
-                if (val instanceof String[]) {
-                    String[] arr = (String[]) val;
-                    return arr.length > 0 ? arr[0] : null;
-                }
-                return (String) val;
-            } catch (NoSuchMethodException e) {
-                Object val = ann.annotationType().getMethod("path").invoke(ann);
-                if (val instanceof String[]) {
-                    String[] arr = (String[]) val;
-                    return arr.length > 0 ? arr[0] : null;
-                }
-                return (String) val;
-            }
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public T getClient() {
-        return (T) Proxy.newProxyInstance(
+        Object proxy = Proxy.newProxyInstance(
                 clientClass.getClassLoader(),
                 new Class<?>[]{clientClass},
                 new StubRegisteringHandler()
         );
+        return clientClass.cast(proxy);
     }
 
     public ResponseBuilder willReturn(String methodName) {
-        return new ResponseBuilder(methodName);
+        if (overloadedMethodNames.contains(methodName)) {
+            throw new IllegalArgumentException("Overloaded Feign method name '" + methodName + "' is ambiguous on "
+                    + clientClass.getName() + ". Use willReturn(Class, Method).");
+        }
+        Method method = methodsByName.get(methodName);
+        if (method == null) {
+            throw new IllegalArgumentException("No supported Feign method named '" + methodName + "' found on " + clientClass.getName() + ".");
+        }
+        return willReturn(method);
+    }
+
+    public ResponseBuilder willReturn(Method method) {
+        if (!metaMap.containsKey(method)) {
+            throw new IllegalArgumentException("Unsupported Feign method: " + method.toGenericString());
+        }
+        return new ResponseBuilder(method);
+    }
+
+    private FeignClientContractStrategy parseClientMethods(Class<T> clientClass) {
+        FeignClientContractStrategy selectedStrategy = null;
+        for (Method method : clientClass.getMethods()) {
+            if (method.getDeclaringClass() == Object.class || method.isDefault()) {
+                continue;
+            }
+            ParsedMethod parsedMethod = parseMethod(clientClass, method);
+            if (parsedMethod == null) {
+                continue;
+            }
+            if (selectedStrategy != null && selectedStrategy != parsedMethod.strategy) {
+                throw new IllegalArgumentException("Do not mix native Feign and Spring Cloud OpenFeign annotations on "
+                        + clientClass.getName() + ".");
+            }
+            selectedStrategy = parsedMethod.strategy;
+            putMethodMeta(method, parsedMethod.meta);
+        }
+        return selectedStrategy;
+    }
+
+    private ParsedMethod parseMethod(Class<?> clientClass, Method method) {
+        for (FeignClientContractStrategy strategy : CONTRACT_STRATEGIES) {
+            FeignMethodMeta meta = strategy.parse(clientClass, method);
+            if (meta != null) {
+                return new ParsedMethod(strategy, meta);
+            }
+        }
+        return null;
+    }
+
+    private void putMethodMeta(Method method, FeignMethodMeta meta) {
+        Method previous = methodsByName.put(method.getName(), method);
+        if (previous != null) {
+            overloadedMethodNames.add(method.getName());
+        }
+        metaMap.put(method, meta);
     }
 
     private class StubRegisteringHandler implements InvocationHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            String name = method.getName();
-            MethodMeta meta = metaMap.get(name);
+            if (method.getDeclaringClass() == Object.class) {
+                return invokeObjectMethod(proxy, method, args);
+            }
+            FeignMethodMeta meta = metaMap.get(method);
             if (meta == null) {
                 return invokeReal(method, args);
             }
 
-            ResponseSpec pending = pendingResponses.remove(name);
+            ResponseSpec pending = pendingResponses.remove(method);
             if (pending != null) {
-                String body;
-                if (pending.body == null) {
-                    body = "{}";
-                } else if (pending.body instanceof String) {
-                    body = (String) pending.body;
-                } else {
-                    body = MAPPER.writeValueAsString(pending.body);
-                }
-                registerStub(meta, args, pending.status, body);
+                registerStub(meta, args, pending);
             }
 
             return invokeReal(method, args);
+        }
+
+        private Object invokeObjectMethod(Object proxy, Method method, Object[] args) {
+            String name = method.getName();
+            if ("toString".equals(name)) {
+                return clientClass.getName() + " WireMock stub proxy";
+            }
+            if ("hashCode".equals(name)) {
+                return System.identityHashCode(proxy);
+            }
+            if ("equals".equals(name)) {
+                return proxy == args[0];
+            }
+            throw new UnsupportedOperationException("Unsupported Object method: " + name);
         }
 
         private Object invokeReal(Method method, Object[] args) throws Throwable {
@@ -199,85 +178,151 @@ public class FeignClientStubber<T> {
         }
     }
 
-    private void registerStub(MethodMeta meta, Object[] args, int status, String body) {
-        String url = resolveUrl(meta.urlTemplate, meta.paramIndex, args);
-
+    private void registerStub(FeignMethodMeta meta, Object[] args, ResponseSpec responseSpec) {
+        String url = resolveUrl(meta, args);
         MappingBuilder mappingBuilder;
-        switch (meta.httpMethod) {
+        switch (meta.httpMethod()) {
             case "POST":
-                mappingBuilder = WireMock.post(url);
+                mappingBuilder = WireMock.post(WireMock.urlEqualTo(url));
                 break;
             case "PUT":
-                mappingBuilder = WireMock.put(url);
+                mappingBuilder = WireMock.put(WireMock.urlEqualTo(url));
                 break;
             case "DELETE":
-                mappingBuilder = WireMock.delete(url);
+                mappingBuilder = WireMock.delete(WireMock.urlEqualTo(url));
                 break;
             case "PATCH":
                 mappingBuilder = WireMock.patch(WireMock.urlEqualTo(url));
                 break;
             default:
-                mappingBuilder = WireMock.get(url);
+                mappingBuilder = WireMock.get(WireMock.urlEqualTo(url));
         }
         server.stubFor(mappingBuilder
                 .willReturn(WireMock.aResponse()
-                        .withStatus(status)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(body)));
+                        .withStatus(responseSpec.status)
+                        .withHeader("Content-Type", responseSpec.contentType)
+                        .withBody(responseSpec.body)));
     }
 
-    private String resolveUrl(String template, Map<Integer, String> paramIndex, Object[] args) {
-        if (args == null || args.length == 0) return template;
-        String url = template;
-        for (Map.Entry<Integer, String> entry : paramIndex.entrySet()) {
+    private String resolveUrl(FeignMethodMeta meta, Object[] args) {
+        String url = meta.urlTemplate();
+        for (Map.Entry<Integer, String> entry : meta.pathVariables().entrySet()) {
             int idx = entry.getKey();
-            String name = entry.getValue();
-            if (idx < args.length) {
-                url = url.replace("{" + name + "}", String.valueOf(args[idx]));
+            if (args == null || idx >= args.length) {
+                continue;
+            }
+            url = url.replace("{" + entry.getValue() + "}", encode(args[idx]));
+        }
+        if (!meta.queryParams().isEmpty()) {
+            List<String> query = new ArrayList<>();
+            for (Map.Entry<Integer, String> entry : meta.queryParams().entrySet()) {
+                int idx = entry.getKey();
+                if (args == null || idx >= args.length || args[idx] == null) {
+                    continue;
+                }
+                query.add(entry.getValue() + "=" + encode(args[idx]));
+            }
+            if (!query.isEmpty()) {
+                url = url + (url.contains("?") ? "&" : "?") + joinQuery(query);
             }
         }
         return url;
     }
 
-    private static class MethodMeta {
-        final Method method;
-        final String httpMethod;
-        final String urlTemplate;
-        final Map<Integer, String> paramIndex;
+    private String joinQuery(List<String> query) {
+        StringBuilder result = new StringBuilder();
+        for (String item : query) {
+            if (result.length() > 0) {
+                result.append('&');
+            }
+            result.append(item);
+        }
+        return result.toString();
+    }
 
-        MethodMeta(Method method, String httpMethod, String urlTemplate, Map<Integer, String> paramIndex) {
-            this.method = method;
-            this.httpMethod = httpMethod;
-            this.urlTemplate = urlTemplate;
-            this.paramIndex = paramIndex;
+    private String encode(Object value) {
+        try {
+            return URLEncoder.encode(String.valueOf(value), "UTF-8");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to URL encode value: " + value, e);
         }
     }
 
     public class ResponseBuilder {
-        private final String methodName;
+        private final Method method;
 
-        ResponseBuilder(String methodName) {
-            this.methodName = methodName;
+        ResponseBuilder(Method method) {
+            this.method = method;
         }
 
         public FeignClientStubber<T> response(Object body) {
-            pendingResponses.put(methodName, new ResponseSpec(200, body));
+            pendingResponses.put(method, ResponseSpec.of(200, body));
             return FeignClientStubber.this;
         }
 
         public FeignClientStubber<T> response(int status, Object body) {
-            pendingResponses.put(methodName, new ResponseSpec(status, body));
+            pendingResponses.put(method, ResponseSpec.of(status, body));
             return FeignClientStubber.this;
+        }
+
+        public FeignClientStubber<T> json(Object body) {
+            pendingResponses.put(method, ResponseSpec.of(200, body, WireMockStubBuilder.APPLICATION_JSON));
+            return FeignClientStubber.this;
+        }
+
+        public FeignClientStubber<T> text(String body) {
+            pendingResponses.put(method, ResponseSpec.of(200, body, WireMockStubBuilder.TEXT_PLAIN));
+            return FeignClientStubber.this;
+        }
+
+        public FeignClientStubber<T> xml(String body) {
+            pendingResponses.put(method, ResponseSpec.of(200, body, WireMockStubBuilder.APPLICATION_XML));
+            return FeignClientStubber.this;
+        }
+    }
+
+    private static class ParsedMethod {
+        final FeignClientContractStrategy strategy;
+        final FeignMethodMeta meta;
+
+        ParsedMethod(FeignClientContractStrategy strategy, FeignMethodMeta meta) {
+            this.strategy = strategy;
+            this.meta = meta;
         }
     }
 
     private static class ResponseSpec {
         final int status;
-        final Object body;
+        final String body;
+        final String contentType;
 
-        ResponseSpec(int status, Object body) {
+        ResponseSpec(int status, String body, String contentType) {
+            if (status < 100 || status > 599) {
+                throw new IllegalArgumentException("HTTP status must be between 100 and 599.");
+            }
             this.status = status;
             this.body = body;
+            this.contentType = contentType;
+        }
+
+        static ResponseSpec of(int status, Object body) {
+            return of(status, body, WireMockStubBuilder.APPLICATION_JSON);
+        }
+
+        static ResponseSpec of(int status, Object body, String contentType) {
+            try {
+                String responseBody;
+                if (body == null) {
+                    responseBody = "{}";
+                } else if (body instanceof String) {
+                    responseBody = (String) body;
+                } else {
+                    responseBody = MAPPER.writeValueAsString(body);
+                }
+                return new ResponseSpec(status, responseBody, contentType);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to serialize Feign stub response.", e);
+            }
         }
     }
 
@@ -302,7 +347,9 @@ public class FeignClientStubber<T> {
             try {
                 byte[] bytes = feign.Util.toByteArray(response.body().asInputStream());
                 String body = new String(bytes, "UTF-8");
-                if (type == String.class || type == Object.class) return body;
+                if (type == String.class || type == Object.class) {
+                    return body;
+                }
                 return MAPPER.readValue(body, MAPPER.constructType(type));
             } catch (feign.FeignException e) {
                 throw e;

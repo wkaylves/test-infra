@@ -2,7 +2,6 @@ package com.github.kaylves.test.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +20,7 @@ import static com.github.kaylves.test.core.TestData.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class RestTemplateIntegrationTest extends BaseWireMock {
+class RestTemplateIntegrationTest extends BaseWireMockTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private RestTemplate restTemplate;
@@ -35,8 +34,7 @@ class RestTemplateIntegrationTest extends BaseWireMock {
     }
 
     @BeforeAll
-    static void setupStubs() {
-        startWireMock();
+    void setupStubs() {
         stubGet("/api/users/1").body(toJson(user(1, "Alice", "alice@example.com"))).stub();
         stubGet("/api/users").body(toJson(Arrays.asList(
                 user(1, "Alice", null),
@@ -51,11 +49,6 @@ class RestTemplateIntegrationTest extends BaseWireMock {
                 .body(toJson(user(1, "Alice Updated", "alice.new@example.com"))).stub();
         stubDelete("/api/users/1").body(toJson(message("user deleted"))).stub();
         stubGet("/api/test-headers").body(toJson(map("ok", true))).stub();
-    }
-
-    @AfterAll
-    static void teardown() {
-        stopWireMock();
     }
 
     @BeforeEach

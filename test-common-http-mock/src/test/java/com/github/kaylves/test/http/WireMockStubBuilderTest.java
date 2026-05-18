@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
@@ -182,6 +183,46 @@ class WireMockStubBuilderTest extends WireMockTestBase {
 
         assertThat(a.getBody()).contains("\"source\":\"a\"");
         assertThat(b.getBody()).contains("\"source\":\"b\"");
+    }
+
+    @Test
+    @DisplayName("匹配 query、请求 header，并返回自定义响应 header")
+    void stub_withQueryRequestHeaderAndResponseHeader() {
+        stubGet("/api/search")
+                .queryParam("name", "Alice")
+                .requestHeader("X-Trace-Id", "trace-1")
+                .header("X-Mock", "yes")
+                .textBody("found")
+                .stub();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Trace-Id", "trace-1");
+        ResponseEntity<String> resp = restTemplate.exchange(
+                getBaseUrl() + "/api/search?name=Alice", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getHeaders().getFirst("X-Mock")).isEqualTo("yes");
+        assertThat(resp.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
+        assertThat(resp.getBody()).isEqualTo("found");
+    }
+
+    @Test
+    @DisplayName("XML body 应返回 XML content type")
+    void stub_xmlBodySetsContentType() {
+        stubGet("/api/xml").xmlBody("<ok>true</ok>").stub();
+
+        ResponseEntity<String> resp = restTemplate.getForEntity(getBaseUrl() + "/api/xml", String.class);
+
+        assertThat(resp.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_XML);
+        assertThat(resp.getBody()).isEqualTo("<ok>true</ok>");
+    }
+
+    @Test
+    @DisplayName("非法 status fail fast")
+    void stub_invalidStatusFailsFast() {
+        assertThatThrownBy(() -> stubGet("/api/bad").status(99))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("HTTP status");
     }
 
     // ==================== helper ====================

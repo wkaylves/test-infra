@@ -3,6 +3,7 @@ package com.github.kaylves.test.http;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,65 +11,88 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 public abstract class BaseWireMock {
 
-    protected static WireMockServer wireMockServer;
+    protected WireMockServer wireMockServer;
 
-    private static final Map<Class<?>, FeignClientStubber<?>> HELPER_CACHE = new ConcurrentHashMap<>();
+    private final Map<Class<?>, FeignClientStubber<?>> helperCache = new ConcurrentHashMap<>();
 
-    protected static void startWireMock() {
+    protected void startWireMock() {
+        if (wireMockServer != null && wireMockServer.isRunning()) {
+            return;
+        }
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort().notifier(new Slf4jNotifier(true)));
         wireMockServer.start();
     }
 
-    protected static void stopWireMock() {
-        HELPER_CACHE.clear();
+    protected void stopWireMock() {
+        helperCache.clear();
         if (wireMockServer != null) {
             wireMockServer.stop();
+            wireMockServer = null;
         }
     }
 
     protected String getBaseUrl() {
-        return wireMockServer.baseUrl();
+        return getWireMockServer().baseUrl();
     }
 
     protected int getPort() {
-        return wireMockServer.port();
+        return getWireMockServer().port();
+    }
+
+    protected WireMockServer getWireMockServer() {
+        if (wireMockServer == null || !wireMockServer.isRunning()) {
+            throw new IllegalStateException("WireMock server is not running. Call startWireMock() first or use a framework-specific base class.");
+        }
+        return wireMockServer;
+    }
+
+    protected void resetWireMock() {
+        getWireMockServer().resetAll();
     }
 
     // ==================== Feign ====================
 
     @SuppressWarnings("unchecked")
-    protected static <T> FeignClientStubber<T> feignHelper(Class<T> clientClass) {
-        return (FeignClientStubber<T>) HELPER_CACHE.computeIfAbsent(
-                clientClass, c -> new FeignClientStubber<>(clientClass, wireMockServer));
+    protected <T> FeignClientStubber<T> feignHelper(Class<T> clientClass) {
+        return (FeignClientStubber<T>) helperCache.computeIfAbsent(
+                clientClass, c -> new FeignClientStubber<>(clientClass, getWireMockServer()));
     }
 
-    protected static <T> T feignClient(Class<T> clientClass) {
+    protected <T> T feignClient(Class<T> clientClass) {
         return feignHelper(clientClass).getClient();
     }
 
-    protected static FeignClientStubber.ResponseBuilder willReturn(Class<?> clientClass, String methodName) {
+    protected FeignClientStubber.ResponseBuilder willReturn(Class<?> clientClass, String methodName) {
         return feignHelper(clientClass).willReturn(methodName);
+    }
+
+    protected FeignClientStubber.ResponseBuilder willReturn(Class<?> clientClass, Method method) {
+        return feignHelper(clientClass).willReturn(method);
     }
 
     // ==================== stub 快捷方法 ====================
 
-    protected static StubDef stubGet(String url) {
-        return new StubDef(wireMockServer, url, "GET");
+    protected WireMockStubBuilder wireMock() {
+        return WireMockStubBuilder.on(getWireMockServer());
     }
 
-    protected static StubDef stubPost(String url) {
-        return new StubDef(wireMockServer, url, "POST");
+    protected StubDef stubGet(String url) {
+        return new StubDef(getWireMockServer(), url, "GET");
     }
 
-    protected static StubDef stubPut(String url) {
-        return new StubDef(wireMockServer, url, "PUT");
+    protected StubDef stubPost(String url) {
+        return new StubDef(getWireMockServer(), url, "POST");
     }
 
-    protected static StubDef stubDelete(String url) {
-        return new StubDef(wireMockServer, url, "DELETE");
+    protected StubDef stubPut(String url) {
+        return new StubDef(getWireMockServer(), url, "PUT");
     }
 
-    protected static StubDef stubPatch(String url) {
-        return new StubDef(wireMockServer, url, "PATCH");
+    protected StubDef stubDelete(String url) {
+        return new StubDef(getWireMockServer(), url, "DELETE");
+    }
+
+    protected StubDef stubPatch(String url) {
+        return new StubDef(getWireMockServer(), url, "PATCH");
     }
 }

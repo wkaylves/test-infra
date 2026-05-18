@@ -3,6 +3,8 @@ package com.github.kaylves.test.http
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.lang.reflect.Method
+
 abstract class BaseWireMockSpec extends Specification {
 
     @Shared
@@ -24,6 +26,14 @@ abstract class BaseWireMockSpec extends Specification {
         delegate.getPort()
     }
 
+    protected WireMockStubBuilder wireMock() {
+        delegate.wireMock()
+    }
+
+    protected void resetWireMock() {
+        delegate.resetWireMock()
+    }
+
     // ==================== Feign ====================
 
     protected <T> FeignClientStubber<T> feignHelper(Class<T> clientClass) {
@@ -36,6 +46,10 @@ abstract class BaseWireMockSpec extends Specification {
 
     protected FeignClientStubber.ResponseBuilder willReturn(Class<?> clientClass, String methodName) {
         delegate.willReturn(clientClass, methodName)
+    }
+
+    protected FeignClientStubber.ResponseBuilder willReturn(Class<?> clientClass, Method method) {
+        delegate.willReturn(clientClass, method)
     }
 
     // ==================== stub 快捷方法 ====================

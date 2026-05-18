@@ -1,6 +1,5 @@
 dependencies {
     api project(':test-common-core')
-    api project(':test-common-junit5')
     api "org.testcontainers:mysql:${testcontainersVersion}"
     api "org.testcontainers:postgresql:${testcontainersVersion}"
     api "org.testcontainers:clickhouse:${testcontainersVersion}"

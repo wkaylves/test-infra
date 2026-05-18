@@ -1,7 +1,6 @@
 package com.github.kaylves.test.http;
 
 import feign.FeignException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,19 +14,13 @@ import static com.github.kaylves.test.core.TestData.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class OpenFeignIntegrationTest extends BaseWireMock {
+class OpenFeignIntegrationTest extends BaseWireMockTest {
 
-    private static UserSpringFeignClient client;
+    private UserSpringFeignClient client;
 
     @BeforeAll
-    static void setup() {
-        startWireMock();
+    void setup() {
         client = feignClient(UserSpringFeignClient.class);
-    }
-
-    @AfterAll
-    static void teardown() {
-        stopWireMock();
     }
 
     @Test
@@ -51,6 +44,17 @@ class OpenFeignIntegrationTest extends BaseWireMock {
         assertThat(users).hasSize(2);
         assertThat(users.get(0).get("name")).isEqualTo("Alice");
         assertThat(users.get(1).get("name")).isEqualTo("Bob");
+    }
+
+    @Test
+    @DisplayName("GET - RequestParam 查询")
+    void get_searchUsersByQueryParam() {
+        willReturn(UserSpringFeignClient.class, "searchUsers")
+                .response(Arrays.asList(user(1, "Alice", null)));
+
+        List<Map<String, Object>> users = client.searchUsers("Alice");
+        assertThat(users).hasSize(1);
+        assertThat(users.get(0).get("name")).isEqualTo("Alice");
     }
 
     @Test

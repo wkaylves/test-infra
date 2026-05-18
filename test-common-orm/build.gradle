@@ -8,5 +8,6 @@ subprojects {
         api "org.assertj:assertj-core:${assertjVersion}"
 
         compileOnly "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+        testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     }
 }

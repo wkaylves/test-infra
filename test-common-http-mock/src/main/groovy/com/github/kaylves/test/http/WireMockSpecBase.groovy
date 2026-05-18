@@ -31,6 +31,10 @@ abstract class WireMockSpecBase extends Specification {
         wireMockServer.port()
     }
 
+    protected WireMockStubBuilder wireMock() {
+        WireMockStubBuilder.on(wireMockServer)
+    }
+
     protected StubDef stubGet(String url) {
         new StubDef(wireMockServer, url, "GET")
     }
