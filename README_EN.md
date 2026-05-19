@@ -41,20 +41,20 @@ Test Infrastructure Platform — providing standard paths, default configuration
 
 ```groovy
 // Controller / Spring Boot integration tests
-testImplementation 'com.github.kaylves:test-infra-spring-mvc:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:1.0.0-SNAPSHOT'
 
 // MyBatis mapper tests
-testImplementation 'com.github.kaylves:test-infra-mybatis:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-mybatis:1.0.0-SNAPSHOT'
 
 // External HTTP dependency isolation
-testImplementation 'com.github.kaylves:test-infra-http-mock:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-http-mock:1.0.0-SNAPSHOT'
 
 // Redis / RocketMQ mock tools
-testImplementation 'com.github.kaylves:test-infra-storage-nosql:1.0.0-SNAPSHOT'
-testImplementation 'com.github.kaylves:test-infra-mq-broker:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-mq-broker:1.0.0-SNAPSHOT'
 
 // Full integration
-testImplementation 'com.github.kaylves:test-infra-all:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-all:1.0.0-SNAPSHOT'
 ```
 
 ### Service Unit Tests
@@ -277,8 +277,8 @@ This project supports publishing to Maven Central. For detailed configuration an
 
 **Quick Start:**
 
-1. Copy `gradle.properties.template` to `gradle.properties` and fill in credentials
-2. Run `./gradlew publishToSonatype` to publish to staging
-3. Run `./gradlew closeAndReleaseSonatypeStagingRepository` to publish to Maven Central
+1. Generate a Central Portal token at https://central.sonatype.com/usertoken
+2. Copy `gradle.properties.template` to `gradle.properties` and fill in the token plus signing key
+3. Run `./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository`
 
 > Spring Boot 2.7.x reached EOL in November 2023. Upgrading to 3.x requires Java 17+ and Jakarta namespace migration; this library has not declared Spring Boot 3.x compatibility.

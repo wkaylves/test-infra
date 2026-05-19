@@ -3,16 +3,16 @@ apply plugin: 'signing'
 
 // Maven Central requires these metadata
 ext {
-    pomUrl = 'https://github.com/kaylves/test-infra'
+    pomUrl = 'https://github.com/wkaylves/test-infra'
     pomDescription = 'A comprehensive test infrastructure platform for Java/Spring applications'
     pomLicenseName = 'The Apache License, Version 2.0'
     pomLicenseUrl = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
-    pomDeveloperId = 'kaylves'
-    pomDeveloperName = 'kaylves'
-    pomDeveloperEmail = 'kaylves@users.noreply.github.com'
-    pomScmUrl = 'https://github.com/kaylves/test-infra'
-    pomScmConnection = 'scm:git:git://github.com/kaylves/test-infra.git'
-    pomScmDeveloperConnection = 'scm:git:ssh://github.com/kaylves/test-infra.git'
+    pomDeveloperId = 'wkaylves'
+    pomDeveloperName = 'wkaylves'
+    pomDeveloperEmail = 'wkaylves@users.noreply.github.com'
+    pomScmUrl = 'https://github.com/wkaylves/test-infra'
+    pomScmConnection = 'scm:git:git://github.com/wkaylves/test-infra.git'
+    pomScmDeveloperConnection = 'scm:git:ssh://github.com/wkaylves/test-infra.git'
 }
 
 java {
@@ -61,20 +61,28 @@ publishing {
 
     repositories {
         maven {
-            name = "OSSRH"
+            name = "CentralPortal"
             url = version.endsWith('SNAPSHOT')
-                    ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-                    : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+                    ? 'https://central.sonatype.com/repository/maven-snapshots/'
+                    : 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
 
             credentials {
-                username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME") ?: ""
-                password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD") ?: ""
+                username = findProperty("centralPortalUsername")
+                        ?: findProperty("ossrhUsername")
+                        ?: System.getenv("CENTRAL_PORTAL_USERNAME")
+                        ?: System.getenv("OSSRH_USERNAME")
+                        ?: ""
+                password = findProperty("centralPortalPassword")
+                        ?: findProperty("ossrhPassword")
+                        ?: System.getenv("CENTRAL_PORTAL_PASSWORD")
+                        ?: System.getenv("OSSRH_PASSWORD")
+                        ?: ""
             }
         }
 
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/kaylves/test-infra")
+            url = uri("https://maven.pkg.github.com/wkaylves/test-infra")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME") ?: ""
                 password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: ""
@@ -84,8 +92,29 @@ publishing {
 }
 
 signing {
-    // Use GPG key for signing
-    def signingKey = findProperty("signing.key") ?: System.getenv("GPG_SIGNING_KEY")
+    def normalizeSigningKey = { key ->
+        if (!key) {
+            return key
+        }
+
+        def trimmedKey = key.trim()
+        if (trimmedKey.contains('BEGIN PGP PRIVATE KEY BLOCK')) {
+            return key
+        }
+
+        try {
+            def decodedKey = new String(trimmedKey.decodeBase64(), 'UTF-8')
+            if (decodedKey.contains('BEGIN PGP PRIVATE KEY BLOCK')) {
+                return decodedKey
+            }
+        } catch (ignored) {
+            // Keep the original value so Gradle can report the real signing error.
+        }
+
+        return key
+    }
+
+    def signingKey = normalizeSigningKey(findProperty("signing.key") ?: System.getenv("GPG_SIGNING_KEY"))
     def signingPassword = findProperty("signing.password") ?: System.getenv("GPG_SIGNING_PASSWORD")
 
     if (signingKey) {
@@ -95,18 +124,18 @@ signing {
     sign publishing.publications.maven
 }
 
-// Task to publish to Maven Central (OSSRH)
+// Task to publish to Maven Central through the Central Portal compatibility API
 tasks.register('publishToMavenCentral') {
     group = 'publishing'
-    description = 'Publishes all artifacts to Maven Central via OSSRH'
-    dependsOn tasks.named('publishMavenPublicationToOSSRHRepository')
+    description = 'Publishes all artifacts to Maven Central via Central Portal'
+    dependsOn tasks.named('publishMavenPublicationToCentralPortalRepository')
 }
 
 // Task to publish SNAPSHOT to Maven Central
 tasks.register('publishSnapshotToMavenCentral') {
     group = 'publishing'
     description = 'Publishes SNAPSHOT artifacts to Maven Central snapshots'
-    dependsOn tasks.named('publishMavenPublicationToOSSRHRepository')
+    dependsOn tasks.named('publishMavenPublicationToCentralPortalRepository')
 }
 
 // Task to release to Maven Central (after staging)
@@ -114,7 +143,7 @@ tasks.register('releaseToMavenCentral') {
     group = 'publishing'
     description = 'Releases staged artifacts to Maven Central'
     doLast {
-        println "To release staged artifacts, visit: https://s01.oss.sonatype.org/"
-        println "Or use the Nexus Staging plugin for automated release."
+        println "To review deployments, visit: https://central.sonatype.com/publishing/deployments"
+        println "Or use the Nexus Staging plugin compatibility tasks for automated release."
     }
 }

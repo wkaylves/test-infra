@@ -41,20 +41,20 @@
 
 ```groovy
 // Controller / Spring Boot 集成测试
-testImplementation 'com.github.kaylves:test-infra-spring-mvc:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:1.0.0-SNAPSHOT'
 
 // MyBatis mapper 测试
-testImplementation 'com.github.kaylves:test-infra-mybatis:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-mybatis:1.0.0-SNAPSHOT'
 
 // 外部 HTTP 依赖隔离
-testImplementation 'com.github.kaylves:test-infra-http-mock:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-http-mock:1.0.0-SNAPSHOT'
 
 // Redis / RocketMQ mock 工具
-testImplementation 'com.github.kaylves:test-infra-storage-nosql:1.0.0-SNAPSHOT'
-testImplementation 'com.github.kaylves:test-infra-mq-broker:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-mq-broker:1.0.0-SNAPSHOT'
 
 // 全量接入
-testImplementation 'com.github.kaylves:test-infra-all:1.0.0-SNAPSHOT'
+testImplementation 'io.github.wkaylves:test-infra-all:1.0.0-SNAPSHOT'
 ```
 
 ### Service 单测
