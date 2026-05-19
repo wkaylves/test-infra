@@ -68,7 +68,7 @@ class WireMockStubBuilderSpec extends WireMockSpecBase {
 
     def "POST - 匹配请求体"() {
         given:
-        stubPost("/api/items").requestBody(toJson(item(null, "new-item")))
+        stubPost("/api/items").jsonRequestBody(toJson(item(null, "new-item")))
                 .status(201).body(toJson(item(2, "new-item"))).stub()
         def headers = new HttpHeaders()
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -101,7 +101,7 @@ class WireMockStubBuilderSpec extends WireMockSpecBase {
 
     def "PUT - 匹配请求体"() {
         given:
-        stubPut("/api/items/1").requestBody(toJson(item(null, "updated")))
+        stubPut("/api/items/1").jsonRequestBody(toJson(item(null, "updated")))
                 .body(toJson(item(1, "updated"))).stub()
         def headers = new HttpHeaders()
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ class WireMockStubBuilderSpec extends WireMockSpecBase {
 
     def "PATCH - 注册 stub"() {
         given:
-        stubPatch("/api/items/1").requestBody(toJson(item(null, "patched")))
+        stubPatch("/api/items/1").jsonRequestBody(toJson(item(null, "patched")))
                 .body(toJson(item(1, "patched"))).stub()
 
         expect:

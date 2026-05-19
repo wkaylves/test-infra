@@ -1,10 +1,10 @@
-# test-common
+# test-infra
 
 [English](README_EN.md)
 
 统一测试基座（Test Infrastructure Platform）—— 为团队常见测试场景提供标准路径、默认配置、测试数据工具和外部依赖隔离能力。
 
-`test-common` 不替代 JUnit5、Spock、Mockito、Spring Test 或 Testcontainers。它的职责是把团队认可的测试写法沉淀成可复用组件，让新增测试用例时更容易选对测试层次、隔离外部依赖，并保持一致的断言与数据构造风格。
+`test-infra` 不替代 JUnit5、Spock、Mockito、Spring Test 或 Testcontainers。它的职责是把团队认可的测试写法沉淀成可复用组件，让新增测试用例时更容易选对测试层次、隔离外部依赖，并保持一致的断言与数据构造风格。
 
 ## 设计原则
 
@@ -12,28 +12,28 @@
 - JUnit5 / Spock 只提供测试引擎级通用能力，不承载所有组件场景。
 - 纯 Mockito 场景优先使用原生 Mockito/JUnit5；只有沉淀了团队约定的能力才进入基座。
 - 文档示例必须对应真实代码，避免目标态 API 误导接入。
-- `test-common-all` 只做聚合依赖，不定义新的能力边界。
+- `test-infra-all` 只做聚合依赖，不定义新的能力边界。
 
 ## 模块总览
 
 | 模块 | 职责 | 接入方式 |
 |------|------|---------|
-| `test-common-core` | PageBuilder、ResultBuilder、JsonPathMatcher、TestData 等通用工具 | 常用基础依赖 |
-| `test-common-junit5` | 纯 JUnit5 层面的通用扩展或约定 | 按需 |
-| `test-common-spock` | Spock 基类和通用 helper | 按需 |
-| `test-common-spring-mvc` | Spring MVC / Spring Boot 测试基类，含 JUnit5 与 Spock 入口 | Controller / Integration 场景 |
-| `test-common-orm:test-common-mybatis` | MyBatis mapper 测试，含 H2 slice 与 MySQL container 路径 | Mapper/DAO 场景 |
-| `test-common-orm:test-common-jpa` | JPA repository 测试入口 | Repository 场景 |
-| `test-common-storage-rdbms` | MySQL / PostgreSQL / ClickHouse Testcontainers | 关系型数据库集成测试 |
-| `test-common-storage-nosql` | Redis / MongoDB / Neo4j 容器与 mock 工具 | NoSQL 场景 |
-| `test-common-storage-search` | Elasticsearch 容器支持 | 搜索场景 |
-| `test-common-storage-file` | MinIO / SFTP / FTP 测试基础设施 | 文件/对象存储场景 |
-| `test-common-mq-broker` | RabbitMQ / Kafka / RocketMQ / Pulsar 容器与 mock 工具 | 消息场景 |
-| `test-common-http-mock` | WireMock、Feign、RestTemplate 等 HTTP 依赖隔离 | 外部 HTTP 依赖场景 |
-| `test-common-rpc-mock` | Dubbo / gRPC mock 辅助 | RPC 场景 |
-| `test-common-schedule-mock` | XXL-Job / Quartz 测试哑火配置 | 调度场景 |
-| `test-common-all` | 一键聚合所有模块 | 全量接入 |
-| `test-common-example` | 可运行样例和黄金测试路径 | 参考，不直接依赖 |
+| `test-infra-core` | PageBuilder、ResultBuilder、JsonPathMatcher、TestData 等通用工具 | 常用基础依赖 |
+| `test-infra-junit5` | 纯 JUnit5 层面的通用扩展或约定 | 按需 |
+| `test-infra-spock` | Spock 基类和通用 helper | 按需 |
+| `test-infra-spring-mvc` | Spring MVC / Spring Boot 测试基类，含 JUnit5 与 Spock 入口 | Controller / Integration 场景 |
+| `test-infra-orm:test-infra-mybatis` | MyBatis mapper 测试，含 H2 slice 与 MySQL container 路径 | Mapper/DAO 场景 |
+| `test-infra-orm:test-infra-jpa` | JPA repository 测试入口 | Repository 场景 |
+| `test-infra-storage-rdbms` | MySQL / PostgreSQL / ClickHouse Testcontainers | 关系型数据库集成测试 |
+| `test-infra-storage-nosql` | Redis / MongoDB / Neo4j 容器与 mock 工具 | NoSQL 场景 |
+| `test-infra-storage-search` | Elasticsearch 容器支持 | 搜索场景 |
+| `test-infra-storage-file` | MinIO / SFTP / FTP 测试基础设施 | 文件/对象存储场景 |
+| `test-infra-mq-broker` | RabbitMQ / Kafka / RocketMQ / Pulsar 容器与 mock 工具 | 消息场景 |
+| `test-infra-http-mock` | WireMock、Feign、RestTemplate 等 HTTP 依赖隔离 | 外部 HTTP 依赖场景 |
+| `test-infra-rpc-mock` | Dubbo / gRPC mock 辅助 | RPC 场景 |
+| `test-infra-schedule-mock` | XXL-Job / Quartz 测试哑火配置 | 调度场景 |
+| `test-infra-all` | 一键聚合所有模块 | 全量接入 |
+| `test-infra-example` | 可运行样例和黄金测试路径 | 参考，不直接依赖 |
 
 ## 快速开始
 
@@ -41,20 +41,20 @@
 
 ```groovy
 // Controller / Spring Boot 集成测试
-testImplementation 'com.github.kaylves:test-common-spring-mvc:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-spring-mvc:1.0.0-SNAPSHOT'
 
 // MyBatis mapper 测试
-testImplementation 'com.github.kaylves:test-common-mybatis:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-mybatis:1.0.0-SNAPSHOT'
 
 // 外部 HTTP 依赖隔离
-testImplementation 'com.github.kaylves:test-common-http-mock:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-http-mock:1.0.0-SNAPSHOT'
 
 // Redis / RocketMQ mock 工具
-testImplementation 'com.github.kaylves:test-common-storage-nosql:1.0.0-SNAPSHOT'
-testImplementation 'com.github.kaylves:test-common-mq-broker:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-storage-nosql:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-mq-broker:1.0.0-SNAPSHOT'
 
 // 全量接入
-testImplementation 'com.github.kaylves:test-common-all:1.0.0-SNAPSHOT'
+testImplementation 'com.github.kaylves:test-infra-all:1.0.0-SNAPSHOT'
 ```
 
 ### Service 单测
@@ -90,7 +90,7 @@ class OrderServiceTest {
 
 ### Controller 测试
 
-Controller 测试归属 `test-common-spring-mvc`，使用 `BaseControllerTest` 和 `JsonPathMatcher`。
+Controller 测试归属 `test-infra-spring-mvc`，使用 `BaseControllerTest` 和 `JsonPathMatcher`。
 
 ```java
 @WebMvcTest(TestController.class)
@@ -120,7 +120,7 @@ class MyControllerSpec extends BaseControllerSpec {
 
 ### MyBatis Mapper 测试
 
-Mapper 测试归属 `test-common-orm:test-common-mybatis`。快速路径使用 H2 slice：
+Mapper 测试归属 `test-infra-orm:test-infra-mybatis`。快速路径使用 H2 slice：
 
 ```java
 @BaseH2MapperTest
@@ -147,7 +147,7 @@ class UserMapperMysqlTest extends BaseMysqlContainerMapperTest {
 
 ### HTTP Mock
 
-外部 HTTP 依赖隔离归属 `test-common-http-mock`。
+外部 HTTP 依赖隔离归属 `test-infra-http-mock`。
 
 ```java
 class MyFeignTest extends WireMockTestBase {
@@ -201,7 +201,7 @@ OrderMapper mapper = MockMyBatisUtils.mockMapper(OrderMapper.class);
 
 ### 调度哑火
 
-调度测试归属 `test-common-schedule-mock`。
+调度测试归属 `test-infra-schedule-mock`。
 
 ```java
 @XxlJobTestBase

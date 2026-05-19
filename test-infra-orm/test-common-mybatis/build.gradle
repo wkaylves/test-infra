@@ -13,5 +13,5 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter:${springBootVersion}"
     testImplementation "org.mybatis.spring.boot:mybatis-spring-boot-starter:${mybatisSpringBootVersion}"
     testImplementation "org.mybatis.spring.boot:mybatis-spring-boot-starter-test:${mybatisSpringBootVersion}"
-    testImplementation "mysql:mysql-connector-java:8.0.33"
+    testImplementation "com.mysql:mysql-connector-j:8.0.33"
 }

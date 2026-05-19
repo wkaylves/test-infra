@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -346,7 +347,7 @@ public class FeignClientStubber<T> {
         public Object decode(Response response, Type type) throws DecodeException, feign.FeignException {
             try {
                 byte[] bytes = feign.Util.toByteArray(response.body().asInputStream());
-                String body = new String(bytes, "UTF-8");
+                String body = new String(bytes, StandardCharsets.UTF_8);
                 if (type == String.class || type == Object.class) {
                     return body;
                 }

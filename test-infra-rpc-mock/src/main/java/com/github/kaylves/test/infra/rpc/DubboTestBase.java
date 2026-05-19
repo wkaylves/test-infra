@@ -14,12 +14,12 @@ import org.mockito.Mockito;
  * replace the bean in the ApplicationContext automatically:</p>
  *
  * <pre>{@code
- * @SpringBootTest
+ * {@literal @}SpringBootTest
  * class MyDubboTest {
- *     @MockBean
+ *     {@literal @}MockBean
  *     private MyDubboService myDubboService;
  *
- *     @Test
+ *     {@literal @}Test
  *     void testSomething() {
  *         when(myDubboService.doSomething()).thenReturn(result);
  *         // ...

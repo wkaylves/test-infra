@@ -14,12 +14,12 @@ import org.mockito.Mockito;
  * replace the bean in the ApplicationContext automatically:</p>
  *
  * <pre>{@code
- * @SpringBootTest
+ * {@literal @}SpringBootTest
  * class MyGrpcTest {
- *     @MockBean
+ *     {@literal @}MockBean
  *     private MyServiceGrpc.MyServiceBlockingStub myServiceStub;
  *
- *     @Test
+ *     {@literal @}Test
  *     void testSomething() {
  *         when(myServiceStub.doSomething(any())).thenReturn(response);
  *         // ...

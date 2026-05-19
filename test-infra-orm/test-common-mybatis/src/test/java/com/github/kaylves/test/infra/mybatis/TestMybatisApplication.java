@@ -4,6 +4,6 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringBootConfiguration;
 
 @SpringBootConfiguration
-@MapperScan("com.github.kaylves.test.mybatis.mapper")
+@MapperScan("com.github.kaylves.test.infra.mybatis.mapper")
 class TestMybatisApplication {
 }

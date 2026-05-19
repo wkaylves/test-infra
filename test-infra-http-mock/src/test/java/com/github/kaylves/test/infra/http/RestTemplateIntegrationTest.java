@@ -41,11 +41,11 @@ class RestTemplateIntegrationTest extends BaseWireMockTest {
                 user(2, "Bob", null)
         ))).stub();
         stubGet("/api/users/999").status(404).body(toJson(error("user not found"))).stub();
-        stubPost("/api/users").requestBody(toJson(user(null, "Charlie", "charlie@example.com")))
+        stubPost("/api/users").jsonRequestBody(toJson(user(null, "Charlie", "charlie@example.com")))
                 .status(201).body(toJson(user(3, "Charlie", "charlie@example.com"))).stub();
-        stubPost("/api/users-500").requestBody(toJson(error("Error")))
+        stubPost("/api/users-500").jsonRequestBody(toJson(error("Error")))
                 .status(500).body(toJson(error("internal server error"))).stub();
-        stubPut("/api/users/1").requestBody(toJson(user(null, "Alice Updated", "alice.new@example.com")))
+        stubPut("/api/users/1").jsonRequestBody(toJson(user(null, "Alice Updated", "alice.new@example.com")))
                 .body(toJson(user(1, "Alice Updated", "alice.new@example.com"))).stub();
         stubDelete("/api/users/1").body(toJson(message("user deleted"))).stub();
         stubGet("/api/test-headers").body(toJson(map("ok", true))).stub();

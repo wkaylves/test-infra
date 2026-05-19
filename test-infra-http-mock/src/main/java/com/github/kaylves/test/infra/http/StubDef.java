@@ -35,7 +35,7 @@ public class StubDef {
         return this;
     }
 
-    public StubDef requestBody(String body) {
+    public StubDef jsonRequestBody(String body) {
         delegate.withJsonRequestBody(body);
         return this;
     }

@@ -65,7 +65,7 @@ public final class SpringCloudOpenFeignContractStrategy implements FeignClientCo
     public void configure(Feign.Builder builder) {
         try {
             Class<?> contractClass = Class.forName("org.springframework.cloud.openfeign.support.SpringMvcContract");
-            builder.contract((feign.Contract) contractClass.newInstance());
+            builder.contract((feign.Contract) contractClass.getDeclaredConstructor().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Spring Cloud OpenFeign annotations require SpringMvcContract on the classpath.", e);
         }

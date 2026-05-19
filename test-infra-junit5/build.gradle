@@ -1,6 +1,8 @@
-// Aggregator module — pulls in spring-mvc, jpa, and mybatis modules transitively
 dependencies {
-    api project(':test-infra-spring-mvc')
-    api project(':test-infra-orm:test-infra-jpa')
-    api project(':test-infra-orm:test-infra-mybatis')
+    api project(':test-infra-core')
+
+    api "org.junit.jupiter:junit-jupiter:${junitJupiterVersion}"
+    api "org.mockito:mockito-core:${mockitoVersion}"
+    api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+    api "org.assertj:assertj-core:${assertjVersion}"
 }
