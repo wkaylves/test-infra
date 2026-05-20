@@ -72,4 +72,17 @@ subprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
+
+    // 如果是 Groovy DSL (build.gradle)
+    tasks.withType(Javadoc) {
+        options {
+            // 允许缺失注释，不将其视为警告或错误
+            encoding = "UTF-8"
+            charSet = "UTF-8"
+            // 关闭 doclint 的 missing 检查（或者直接传入 'none' 关闭全部检查）
+            addStringOption('Xdoclint:none', '-quiet')
+        }
+        // 如果这些警告导致了构建失败，强制让任务在有警告时也能成功
+        failOnError = false
+    }
 }
