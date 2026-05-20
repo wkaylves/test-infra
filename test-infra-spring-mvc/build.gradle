@@ -2,17 +2,16 @@ apply plugin: 'groovy'
 
 dependencies {
     api project(':test-infra-core')
-    api "org.junit.jupiter:junit-jupiter:${junitJupiterVersion}"
-    api "org.mockito:mockito-core:${mockitoVersion}"
-    api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
-    api "org.assertj:assertj-core:${assertjVersion}"
-    api "org.spockframework:spock-core:${spockVersion}"
-    api "org.spockframework:spock-spring:${spockVersion}"
-    api "org.apache.groovy:groovy-all:${groovyVersion}"
 
     compileOnly "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     compileOnly "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    compileOnly "org.assertj:assertj-core:${assertjVersion}"
+    compileOnly "org.spockframework:spock-core:${spockVersion}"
+    compileOnly "org.spockframework:spock-spring:${spockVersion}"
+    compileOnly "org.apache.groovy:groovy-all:${groovyVersion}"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    testImplementation "org.spockframework:spock-spring:${spockVersion}"
+    testImplementation "org.apache.groovy:groovy-all:${groovyVersion}"
 }

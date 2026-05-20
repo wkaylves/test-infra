@@ -59,11 +59,11 @@ testImplementation 'io.github.wkaylves:test-infra-all:1.0.0-SNAPSHOT'
 
 ### Service Unit Tests
 
-Service unit tests stay lightweight by default, without starting the Spring container. Pure Mockito scenarios can directly use native JUnit5 + Mockito; the base only participates when unified test data, assertions, or middleware mock helpers are needed.
+Service unit tests stay lightweight by default, without starting the Spring container. Extending `BaseJUnit5Test` provides auto-injected AssertJ Soft Assertions, suitable for scenarios that verify multiple fields at once. Pure Mockito scenarios can still use native `@ExtendWith(MockitoExtension.class)` directly.
 
 ```java
 @ExtendWith(MockitoExtension.class)
-class OrderServiceTest {
+class OrderServiceTest extends BaseJUnit5Test {
     @Mock
     private OrderRepository orderRepository;
 
@@ -83,22 +83,40 @@ class OrderServiceTest {
         assertThat(result).isPresent();
         assertThat(result.get().getOrderNo()).isEqualTo("ORD-001");
     }
+
+    @Test
+    void shouldVerifyMultipleFieldsSoftly() {
+        Order order = new Order();
+        order.setOrderNo("ORD-002");
+        order.setCustomerName("Bob");
+
+        when(orderRepository.save(any())).thenReturn(order);
+
+        Order result = orderService.createOrder(order);
+        softly.assertThat(result.getOrderNo()).isEqualTo("ORD-002");
+        softly.assertThat(result.getCustomerName()).isEqualTo("Bob");
+    }
 }
 ```
 
-The codebase also provides `BaseServiceTest`, which is just a lightweight JUnit5 + Mockito entry point, not a core selling point of the base.
-
 ### Controller Tests
 
-Controller tests belong to `test-infra-spring-mvc`, using `BaseControllerTest` and `JsonPathMatcher`.
+Controller tests belong to `test-infra-spring-mvc`, using `BaseControllerTest` and `MvcTestResult`.
 
 ```java
-@WebMvcTest(TestController.class)
-class MyControllerTest extends BaseControllerTest {
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
     @Test
-    void shouldReturnOrder() throws Exception {
-        JsonPathMatcher result = performGetAndMatch("/api/orders/1");
-        assertThat(result.readString("$.orderNo")).isEqualTo("ORD-001");
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrderWithHeader() {
+        Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+        MvcTestResult result = performPost("/api/orders", requestBody, headers);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
     }
 }
 ```
@@ -106,14 +124,23 @@ class MyControllerTest extends BaseControllerTest {
 Spock entry point provided by the same component:
 
 ```groovy
-@WebMvcTest(TestController)
-class MyControllerSpec extends BaseControllerSpec {
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
     def "should return order"() {
         when:
-        def result = performGetAndMatch("/api/orders/1")
+        def result = performGet("/api/orders/1")
 
         then:
-        result.readString('$.orderNo') == 'ORD-001'
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
     }
 }
 ```
@@ -218,8 +245,11 @@ class MyXxlJobTest {
 | `ResultBuilder` | core | Build unified response test data |
 | `JsonPathMatcher` | core | JSON response assertions |
 | `TestData` | core | Common Map test data |
+| `BaseJUnit5Test` | junit5 | JUnit5 test base (AssertJ Soft Assertions auto-injection) |
 | `BaseControllerTest` | spring-mvc | JUnit5 MockMvc shortcut |
 | `BaseControllerSpec` | spring-mvc | Spock MockMvc shortcut |
+| `MvcTestResult` | spring-mvc | MockMvc response wrapper (HTTP status + JsonPathMatcher + assertion chain) |
+| `MvcTestException` | spring-mvc | MockMvc request failure runtime exception |
 | `BaseIntegrationTest` | spring-mvc | Spring Boot integration test annotation |
 | `BaseIntegrationSpec` | spring-mvc | Spock Spring Boot integration test entry |
 | `BaseH2MapperTest` | mybatis | MyBatis + H2 slice test annotation |

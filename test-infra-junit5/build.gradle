@@ -2,7 +2,11 @@ dependencies {
     api project(':test-infra-core')
 
     api "org.junit.jupiter:junit-jupiter:${junitJupiterVersion}"
-    api "org.mockito:mockito-core:${mockitoVersion}"
-    api "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
     api "org.assertj:assertj-core:${assertjVersion}"
+
+    compileOnly "org.mockito:mockito-core:${mockitoVersion}"
+    compileOnly "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
 }

@@ -59,11 +59,11 @@ testImplementation 'io.github.wkaylves:test-infra-all:1.0.0-SNAPSHOT'
 
 ### Service 单测
 
-Service 单测默认保持轻量，不启动 Spring 容器。纯 Mockito 场景可以直接使用原生 JUnit5 + Mockito；基座只在需要统一测试数据、断言或中间件 mock helper 时参与。
+Service 单测默认保持轻量，不启动 Spring 容器。继承 `BaseJUnit5Test` 可获得 AssertJ Soft Assertions 自动注入，适合需要一次验证多个字段的场景。纯 Mockito 场景仍可直接使用原生 `@ExtendWith(MockitoExtension.class)`。
 
 ```java
 @ExtendWith(MockitoExtension.class)
-class OrderServiceTest {
+class OrderServiceTest extends BaseJUnit5Test {
     @Mock
     private OrderRepository orderRepository;
 
@@ -83,22 +83,40 @@ class OrderServiceTest {
         assertThat(result).isPresent();
         assertThat(result.get().getOrderNo()).isEqualTo("ORD-001");
     }
+
+    @Test
+    void shouldVerifyMultipleFieldsSoftly() {
+        Order order = new Order();
+        order.setOrderNo("ORD-002");
+        order.setCustomerName("Bob");
+
+        when(orderRepository.save(any())).thenReturn(order);
+
+        Order result = orderService.createOrder(order);
+        softly.assertThat(result.getOrderNo()).isEqualTo("ORD-002");
+        softly.assertThat(result.getCustomerName()).isEqualTo("Bob");
+    }
 }
 ```
 
-当前代码中也提供了 `BaseServiceTest`，它只是 JUnit5 + Mockito 的轻量入口，不作为基座核心卖点。
-
 ### Controller 测试
 
-Controller 测试归属 `test-infra-spring-mvc`，使用 `BaseControllerTest` 和 `JsonPathMatcher`。
+Controller 测试归属 `test-infra-spring-mvc`，使用 `BaseControllerTest` 和 `MvcTestResult`。
 
 ```java
-@WebMvcTest(TestController.class)
-class MyControllerTest extends BaseControllerTest {
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
     @Test
-    void shouldReturnOrder() throws Exception {
-        JsonPathMatcher result = performGetAndMatch("/api/orders/1");
-        assertThat(result.readString("$.orderNo")).isEqualTo("ORD-001");
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrderWithHeader() {
+        Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+        MvcTestResult result = performPost("/api/orders", requestBody, headers);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
     }
 }
 ```
@@ -106,14 +124,23 @@ class MyControllerTest extends BaseControllerTest {
 Spock 入口由同一组件提供：
 
 ```groovy
-@WebMvcTest(TestController)
-class MyControllerSpec extends BaseControllerSpec {
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
     def "should return order"() {
         when:
-        def result = performGetAndMatch("/api/orders/1")
+        def result = performGet("/api/orders/1")
 
         then:
-        result.readString('$.orderNo') == 'ORD-001'
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
     }
 }
 ```
@@ -218,8 +245,11 @@ class MyXxlJobTest {
 | `ResultBuilder` | core | 构造统一响应测试数据 |
 | `JsonPathMatcher` | core | JSON 响应断言 |
 | `TestData` | core | 常见 Map 测试数据 |
+| `BaseJUnit5Test` | junit5 | JUnit5 测试基座（AssertJ Soft Assertions 自动注入） |
 | `BaseControllerTest` | spring-mvc | JUnit5 MockMvc 快捷入口 |
 | `BaseControllerSpec` | spring-mvc | Spock MockMvc 快捷入口 |
+| `MvcTestResult` | spring-mvc | MockMvc 响应包装（含 HTTP 状态码 + JsonPathMatcher + 断言链） |
+| `MvcTestException` | spring-mvc | MockMvc 请求失败运行时异常 |
 | `BaseIntegrationTest` | spring-mvc | Spring Boot 集成测试注解 |
 | `BaseIntegrationSpec` | spring-mvc | Spock Spring Boot 集成测试入口 |
 | `BaseH2MapperTest` | mybatis | MyBatis + H2 slice 测试注解 |

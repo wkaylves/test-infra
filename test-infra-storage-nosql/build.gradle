@@ -1,6 +1,7 @@
 dependencies {
     api project(':test-infra-core')
     api project(':test-infra-junit5')
+    api "org.mockito:mockito-core:${mockitoVersion}"
     api "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     api "org.testcontainers:mongodb:${testcontainersVersion}"
     api "org.testcontainers:neo4j:${testcontainersVersion}"
