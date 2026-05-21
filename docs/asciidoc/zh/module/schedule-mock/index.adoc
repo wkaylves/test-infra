@@ -1,0 +1,41 @@
+== 调度 Mock 模块
+
+`test-infra-schedule-mock` 提供 XXL-Job / Quartz 测试哑火配置。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-schedule-mock:{infraVersion}'
+----
+
+=== @XxlJobTestBase
+
+XXL-Job 测试注解，将 XXL-Job admin 地址置空，避免测试时连接远程调度中心。
+
+[source,java]
+----
+@XxlJobTestBase
+class MyXxlJobTest {
+    @Test
+    void shouldRunJob() {
+        // XXL-Job admin 地址已置空，Quartz auto-startup=false
+        // 可以安全地测试 Job Handler 逻辑
+    }
+}
+----
+
+=== Quartz 哑火
+
+使用 `@XxlJobTestBase` 时，Quartz 的 `auto-startup` 会被设置为 `false`，避免调度任务在测试期间自动执行。
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`@XxlJobTestBase`
+|XXL-Job 测试注解
+|===

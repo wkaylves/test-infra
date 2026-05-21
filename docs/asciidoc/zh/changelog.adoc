@@ -1,0 +1,20 @@
+== 更新日志
+
+=== V{infraVersion}
+
+- 初始版本发布
+- 提供 `test-infra-core` 核心工具类
+- 提供 `test-infra-junit5` JUnit5 基座
+- 提供 `test-infra-spock` Spock 基座
+- 提供 `test-infra-spring-mvc` Spring MVC 测试支持
+- 提供 `test-infra-orm` MyBatis / JPA 测试支持
+- 提供 `test-infra-storage-rdbms` 关系型数据库容器支持
+- 提供 `test-infra-storage-nosql` NoSQL 容器与 mock 支持
+- 提供 `test-infra-storage-search` Elasticsearch 容器支持
+- 提供 `test-infra-storage-file` 文件存储容器支持
+- 提供 `test-infra-mq-broker` 消息队列容器与 mock 支持
+- 提供 `test-infra-http-mock` HTTP 依赖隔离支持
+- 提供 `test-infra-rpc-mock` RPC mock 支持
+- 提供 `test-infra-schedule-mock` 调度哑火支持
+- 提供 `test-infra-all` 聚合依赖
+- 提供 `test-infra-example` 可运行样例

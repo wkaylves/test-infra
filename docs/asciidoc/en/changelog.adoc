@@ -1,0 +1,20 @@
+== Changelog
+
+=== V{infraVersion}
+
+- Initial release
+- `test-infra-core` core utilities
+- `test-infra-junit5` JUnit5 platform
+- `test-infra-spock` Spock platform
+- `test-infra-spring-mvc` Spring MVC test support
+- `test-infra-orm` MyBatis / JPA test support
+- `test-infra-storage-rdbms` RDBMS container support
+- `test-infra-storage-nosql` NoSQL container and mock support
+- `test-infra-storage-search` Elasticsearch container support
+- `test-infra-storage-file` File storage container support
+- `test-infra-mq-broker` Messaging container and mock support
+- `test-infra-http-mock` HTTP dependency isolation
+- `test-infra-rpc-mock` RPC mock support
+- `test-infra-schedule-mock` Scheduling silencing support
+- `test-infra-all` aggregate dependency
+- `test-infra-example` runnable examples

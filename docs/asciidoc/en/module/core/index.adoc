@@ -1,0 +1,80 @@
+== Core Module
+
+`test-infra-core` provides common test utilities and is the base dependency for other modules.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-core:{infraVersion}'
+----
+
+=== PageBuilder
+
+Constructs pagination test data with customizable page number, page size, and total count.
+
+[source,java]
+----
+// Build a paginated result
+PageInfo<User> page = PageBuilder.of(1, 10, 100)
+    .data(userList)
+    .build();
+----
+
+=== ResultBuilder
+
+Constructs unified response test data, simulating business system Result wrappers.
+
+[source,java]
+----
+// Build success response
+Result<User> success = ResultBuilder.success(user);
+
+// Build failure response
+Result<User> fail = ResultBuilder.fail("USER_NOT_FOUND", "User not found");
+----
+
+=== JsonPathMatcher
+
+JSON response assertion utility for MockMvc or HTTP response JsonPath matching.
+
+[source,java]
+----
+// Use in MockMvc tests
+MvcTestResult result = performGet("/api/users/1");
+result.assert2xx()
+    .matchJsonPath("$.name", equalTo("Alice"))
+    .matchJsonPath("$.age", greaterThan(18));
+----
+
+=== TestData
+
+Common Map test data factory for quick test input construction.
+
+[source,java]
+----
+Map<String, Object> data = TestData.builder()
+    .put("name", "Alice")
+    .put("age", 25)
+    .build();
+----
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`PageBuilder`
+|Constructs pagination test data
+
+|`ResultBuilder`
+|Constructs unified response test data
+
+|`JsonPathMatcher`
+|JSON response assertions
+
+|`TestData`
+|Common Map test data
+|===

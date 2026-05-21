@@ -1,0 +1,97 @@
+== HTTP Mock Module
+
+`test-infra-http-mock` provides WireMock, Feign, RestTemplate HTTP dependency isolation.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-http-mock:{infraVersion}'
+----
+
+=== WireMockTestBase (JUnit5)
+
+JUnit5 WireMock test base class, preset stubs via `setupStubs()`.
+
+[source,java]
+----
+class MyFeignTest extends WireMockTestBase {
+    @Override
+    protected void setupStubs() {
+        stubGet("/api/external/users")
+                .queryParam("status", "ACTIVE")
+                .requestHeader("X-Trace-Id", "test-trace")
+                .header("X-Mock", "wiremock")
+                .body("[{\"id\":1,\"name\":\"Alice\"}]")
+                .stub();
+    }
+
+    @Test
+    void shouldCallExternalApi() {
+        String baseUrl = getBaseUrl();
+        // Point client to baseUrl and make the call
+    }
+}
+----
+
+=== BaseWireMockSpec (Spock)
+
+Spock WireMock test base class.
+
+[source,groovy]
+----
+class MyFeignSpec extends BaseWireMockSpec {
+    def setupSpec() {
+        stubGet('/api/external/ping')
+                .textBody('pong')
+                .contentType('text/plain')
+                .stub()
+    }
+
+    def "should call external api"() {
+        expect:
+        getBaseUrl()
+    }
+}
+----
+
+=== WireMockStubBuilder
+
+WireMock stub builder with chained request matching and response configuration.
+
+[source,java]
+----
+// GET request stub
+stubGet("/api/users")
+    .queryParam("status", "ACTIVE")
+    .header("Content-Type", "application/json")
+    .body("[{\"id\":1}]")
+    .stub();
+
+// POST request stub
+stubPost("/api/users")
+    .body("{\"id\":2}")
+    .status(201)
+    .stub();
+----
+
+=== Feign Shortcut
+
+For Feign shortcuts, use `willReturn(Client.class, "methodName")` to preset the next call's response. If the Feign interface has overloaded methods, use `willReturn(Client.class, Method)` — the method name entry will fail fast, avoiding incorrect binding by string method name.
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`WireMockTestBase`
+|JUnit5 WireMock test base class
+
+|`BaseWireMockSpec`
+|Spock WireMock test base class
+
+|`WireMockStubBuilder`
+|WireMock stub builder
+|===

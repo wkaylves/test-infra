@@ -1,0 +1,35 @@
+== Spock Module
+
+`test-infra-spock` provides Spock base classes and common helpers.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-spock:{infraVersion}'
+----
+
+=== Usage
+
+The Spock module provides base classes aligned with the JUnit5 module, using Groovy/Spock syntax. Key capabilities include:
+
+- Soft assertion support
+- Common test data construction
+- Integration with Spring MVC, HTTP Mock and other module Spock entry points
+
+[source,groovy]
+----
+class UserServiceSpec extends BaseSpec {
+    def "should create user"() {
+        given:
+        def user = new User(name: "Alice", age: 25)
+
+        when:
+        def result = userService.create(user)
+
+        then:
+        result.name == "Alice"
+        result.age == 25
+    }
+}
+----

@@ -1,0 +1,96 @@
+== Introduction
+
+test-infra (Unified Test Infrastructure) provides standard paths, default configurations, test data utilities, and external dependency isolation for common team testing scenarios.
+
+test-infra does not replace JUnit5, Spock, Mockito, Spring Test, or Testcontainers. Its responsibility is to codify team-approved testing patterns into reusable components, making it easier to choose the right testing layer, isolate external dependencies, and maintain consistent assertion and data construction styles.
+
+=== Design Principles
+
+- **Component boundaries**: Spring MVC, HTTP mock, MyBatis, storage, MQ, RPC, scheduling capabilities are provided by their respective modules.
+- **JUnit5 / Spock only provide test-engine-level generic capabilities**, not all component scenarios.
+- **Pure Mockito scenarios prefer native Mockito/JUnit5**; only capabilities that codify team conventions enter the platform.
+- **Documentation examples must correspond to real code**, avoiding target-state API misdirection.
+- **`test-infra-all` is an aggregate dependency only**, not defining new capability boundaries.
+
+=== Tech Stack
+
+- Java 8+
+- Gradle 8.8 wrapper
+- Spring Boot 2.7.18
+- JUnit 5.9.3 / Mockito 4.11.0 / AssertJ 3.24.2
+- Spock 2.3 / Groovy 4.0
+- Testcontainers 1.19.3
+- WireMock 2.35.1
+
+=== Module Overview
+
+[cols="2,3,2",options="header"]
+|===
+|Module
+|Responsibility
+|Integration
+
+|`test-infra-core`
+|PageBuilder, ResultBuilder, JsonPathMatcher, TestData and other common utilities
+|Base dependency
+
+|`test-infra-junit5`
+|Generic JUnit5 extensions and conventions
+|As needed
+
+|`test-infra-spock`
+|Spock base classes and common helpers
+|As needed
+
+|`test-infra-spring-mvc`
+|Spring MVC / Spring Boot test base classes with JUnit5 and Spock entry points
+|Controller / Integration
+
+|`test-infra-orm:test-infra-mybatis`
+|MyBatis mapper tests with H2 slice and MySQL container paths
+|Mapper/DAO
+
+|`test-infra-orm:test-infra-jpa`
+|JPA repository test entry point
+|Repository
+
+|`test-infra-storage-rdbms`
+|MySQL / PostgreSQL / ClickHouse Testcontainers
+|RDBMS integration
+
+|`test-infra-storage-nosql`
+|Redis / MongoDB / Neo4j containers and mock utilities
+|NoSQL
+
+|`test-infra-storage-search`
+|Elasticsearch container support
+|Search
+
+|`test-infra-storage-file`
+|MinIO / SFTP / FTP test infrastructure
+|File/Object storage
+
+|`test-infra-mq-broker`
+|RabbitMQ / Kafka / RocketMQ / Pulsar containers and mock utilities
+|Messaging
+
+|`test-infra-http-mock`
+|WireMock, Feign, RestTemplate HTTP dependency isolation
+|External HTTP deps
+
+|`test-infra-rpc-mock`
+|Dubbo / gRPC mock utilities
+|RPC
+
+|`test-infra-schedule-mock`
+|XXL-Job / Quartz test silencing configuration
+|Scheduling
+
+|`test-infra-all`
+|One-click aggregate of all modules
+|Full integration
+
+|`test-infra-example`
+|Runnable examples and golden test paths
+|Reference only
+|===

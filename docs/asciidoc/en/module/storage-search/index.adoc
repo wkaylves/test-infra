@@ -1,0 +1,39 @@
+== Search Storage Module
+
+`test-infra-storage-search` provides Elasticsearch container support.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-storage-search:{infraVersion}'
+----
+
+=== SharedElasticsearchContainer
+
+Elasticsearch singleton container based on Testcontainers.
+
+[source,java]
+----
+class ElasticsearchIntegrationTest {
+    @Container
+    static ElasticsearchContainer elasticsearch = SharedElasticsearchContainer.getInstance();
+
+    @Test
+    void shouldConnect() {
+        String httpHostAddress = elasticsearch.getHttpHostAddress();
+        // Connect to Elasticsearch using httpHostAddress
+    }
+}
+----
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`SharedElasticsearchContainer`
+|Elasticsearch singleton container
+|===

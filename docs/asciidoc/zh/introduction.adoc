@@ -1,0 +1,96 @@
+== 简介
+
+test-infra（统一测试基座）为团队常见测试场景提供标准路径、默认配置、测试数据工具和外部依赖隔离能力。
+
+test-infra 不替代 JUnit5、Spock、Mockito、Spring Test 或 Testcontainers。它的职责是把团队认可的测试写法沉淀成可复用组件，让新增测试用例时更容易选对测试层次、隔离外部依赖，并保持一致的断言与数据构造风格。
+
+=== 设计原则
+
+- **以组件为边界**：Spring MVC、HTTP mock、MyBatis、存储、MQ、RPC、调度等能力由各自模块提供。
+- **JUnit5 / Spock 只提供测试引擎级通用能力**，不承载所有组件场景。
+- **纯 Mockito 场景优先使用原生 Mockito/JUnit5**；只有沉淀了团队约定的能力才进入基座。
+- **文档示例必须对应真实代码**，避免目标态 API 误导接入。
+- **`test-infra-all` 只做聚合依赖**，不定义新的能力边界。
+
+=== 技术栈
+
+- Java 8+
+- Gradle 8.8 wrapper
+- Spring Boot 2.7.18
+- JUnit 5.9.3 / Mockito 4.11.0 / AssertJ 3.24.2
+- Spock 2.3 / Groovy 4.0
+- Testcontainers 1.19.3
+- WireMock 2.35.1
+
+=== 模块总览
+
+[cols="2,3,2",options="header"]
+|===
+|模块
+|职责
+|接入方式
+
+|`test-infra-core`
+|PageBuilder、ResultBuilder、JsonPathMatcher、TestData 等通用工具
+|常用基础依赖
+
+|`test-infra-junit5`
+|纯 JUnit5 层面的通用扩展或约定
+|按需
+
+|`test-infra-spock`
+|Spock 基类和通用 helper
+|按需
+
+|`test-infra-spring-mvc`
+|Spring MVC / Spring Boot 测试基类，含 JUnit5 与 Spock 入口
+|Controller / Integration 场景
+
+|`test-infra-orm:test-infra-mybatis`
+|MyBatis mapper 测试，含 H2 slice 与 MySQL container 路径
+|Mapper/DAO 场景
+
+|`test-infra-orm:test-infra-jpa`
+|JPA repository 测试入口
+|Repository 场景
+
+|`test-infra-storage-rdbms`
+|MySQL / PostgreSQL / ClickHouse Testcontainers
+|关系型数据库集成测试
+
+|`test-infra-storage-nosql`
+|Redis / MongoDB / Neo4j 容器与 mock 工具
+|NoSQL 场景
+
+|`test-infra-storage-search`
+|Elasticsearch 容器支持
+|搜索场景
+
+|`test-infra-storage-file`
+|MinIO / SFTP / FTP 测试基础设施
+|文件/对象存储场景
+
+|`test-infra-mq-broker`
+|RabbitMQ / Kafka / RocketMQ / Pulsar 容器与 mock 工具
+|消息场景
+
+|`test-infra-http-mock`
+|WireMock、Feign、RestTemplate 等 HTTP 依赖隔离
+|外部 HTTP 依赖场景
+
+|`test-infra-rpc-mock`
+|Dubbo / gRPC mock 辅助
+|RPC 场景
+
+|`test-infra-schedule-mock`
+|XXL-Job / Quartz 测试哑火配置
+|调度场景
+
+|`test-infra-all`
+|一键聚合所有模块
+|全量接入
+
+|`test-infra-example`
+|可运行样例和黄金测试路径
+|参考，不直接依赖
+|===

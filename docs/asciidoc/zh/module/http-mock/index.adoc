@@ -1,0 +1,97 @@
+== HTTP Mock 模块
+
+`test-infra-http-mock` 提供 WireMock、Feign、RestTemplate 等 HTTP 依赖隔离。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-http-mock:{infraVersion}'
+----
+
+=== WireMockTestBase（JUnit5）
+
+JUnit5 WireMock 测试基类，通过 `setupStubs()` 方法预置 Stub。
+
+[source,java]
+----
+class MyFeignTest extends WireMockTestBase {
+    @Override
+    protected void setupStubs() {
+        stubGet("/api/external/users")
+                .queryParam("status", "ACTIVE")
+                .requestHeader("X-Trace-Id", "test-trace")
+                .header("X-Mock", "wiremock")
+                .body("[{\"id\":1,\"name\":\"Alice\"}]")
+                .stub();
+    }
+
+    @Test
+    void shouldCallExternalApi() {
+        String baseUrl = getBaseUrl();
+        // client 指向 baseUrl 后发起调用
+    }
+}
+----
+
+=== BaseWireMockSpec（Spock）
+
+Spock WireMock 测试基类。
+
+[source,groovy,subs="attributes+"]
+----
+class MyFeignSpec extends BaseWireMockSpec {
+    def setupSpec() {
+        stubGet('/api/external/ping')
+                .textBody('pong')
+                .contentType('text/plain')
+                .stub()
+    }
+
+    def "should call external api"() {
+        expect:
+        getBaseUrl()
+    }
+}
+----
+
+=== WireMockStubBuilder
+
+WireMock Stub 构建器，支持链式配置请求匹配和响应。
+
+[source,java]
+----
+// GET 请求 stub
+stubGet("/api/users")
+    .queryParam("status", "ACTIVE")
+    .header("Content-Type", "application/json")
+    .body("[{\"id\":1}]")
+    .stub();
+
+// POST 请求 stub
+stubPost("/api/users")
+    .body("{\"id\":2}")
+    .status(201)
+    .stub();
+----
+
+=== Feign 便捷入口
+
+需要 Feign 便捷入口时，可以用 `willReturn(Client.class, "methodName")` 预置下一次调用的响应。若 Feign 接口存在重载方法，使用 `willReturn(Client.class, Method)`，方法名入口会 fail fast，避免按字符串方法名误绑定。
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`WireMockTestBase`
+|JUnit5 WireMock 测试基类
+
+|`BaseWireMockSpec`
+|Spock WireMock 测试基类
+
+|`WireMockStubBuilder`
+|WireMock Stub 构建器
+|===

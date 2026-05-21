@@ -1,0 +1,157 @@
+== Spring MVC Module
+
+`test-infra-spring-mvc` provides Spring MVC / Spring Boot test base classes with JUnit5 and Spock entry points.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:{infraVersion}'
+----
+
+=== BaseControllerTest (JUnit5)
+
+JUnit5 MockMvc shortcut entry point, encapsulating GET/POST/PUT/DELETE request methods and response assertions.
+
+[source,java]
+----
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
+
+    @Test
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrder() {
+        String body = "{\"orderNo\":\"ORD-002\"}";
+        MvcTestResult result = performPost("/api/orders", body);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
+    }
+
+    @Test
+    void shouldUpdateOrder() {
+        String body = "{\"orderNo\":\"ORD-003\"}";
+        MvcTestResult result = performPut("/api/orders/1", body);
+        assertThat(result.assert2xx()).isNotNull();
+    }
+
+    @Test
+    void shouldDeleteOrder() {
+        MvcTestResult result = performDelete("/api/orders/1");
+        assertThat(result.assert2xx()).isNotNull();
+    }
+}
+----
+
+=== Request Header Support
+
+All request methods support custom headers:
+
+[source,java]
+----
+@Test
+void shouldReturnOrderWithTraceId() {
+    Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+    MvcTestResult result = performGet("/api/orders/1", headers);
+    assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+}
+----
+
+=== Query Parameter Support
+
+[source,java]
+----
+@Test
+void shouldSearchOrders() {
+    Map<String, String> params = new HashMap<>();
+    params.put("keyword", "java");
+    params.put("page", "1");
+    MvcTestResult result = performGet("/api/orders/search", null, params);
+    assertThat(result.readString("$.keyword")).isEqualTo("java");
+}
+----
+
+=== BaseControllerSpec (Spock)
+
+Spock MockMvc shortcut entry point, aligned with `BaseControllerTest`.
+
+[source,groovy]
+----
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
+
+    def "should return order"() {
+        when:
+        def result = performGet("/api/orders/1")
+
+        then:
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
+    }
+}
+----
+
+=== MvcTestResult
+
+MockMvc response wrapper with chained assertion capabilities:
+
+- `assert2xx()` — Assert HTTP 2xx status
+- `assertStatus(int)` — Assert specific status code
+- `readString(String)` — Read JsonPath string value
+- `readInt(String)` — Read JsonPath integer value
+- `matchJsonPath(String, Matcher)` — Match with Hamcrest Matcher
+
+=== BaseIntegrationTest / BaseIntegrationSpec
+
+Spring Boot integration test annotations for scenarios requiring a full Spring context.
+
+[source,java]
+----
+@SpringBootTest
+class OrderIntegrationTest extends BaseIntegrationTest {
+    @Autowired
+    private OrderService orderService;
+
+    @Test
+    void shouldCreateOrder() {
+        // Full Spring context test
+    }
+}
+----
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`BaseControllerTest`
+|JUnit5 MockMvc shortcut entry
+
+|`BaseControllerSpec`
+|Spock MockMvc shortcut entry
+
+|`MvcTestResult`
+|MockMvc response wrapper (status + JsonPathMatcher + assertion chain)
+
+|`MvcTestException`
+|MockMvc request failure runtime exception
+
+|`BaseIntegrationTest`
+|Spring Boot integration test annotation (JUnit5)
+
+|`BaseIntegrationSpec`
+|Spring Boot integration test entry (Spock)
+|===

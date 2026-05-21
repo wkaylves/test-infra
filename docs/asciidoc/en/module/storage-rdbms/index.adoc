@@ -1,0 +1,69 @@
+== RDBMS Storage Module
+
+`test-infra-storage-rdbms` provides MySQL / PostgreSQL / ClickHouse Testcontainers support.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-storage-rdbms:{infraVersion}'
+----
+
+=== SharedMySQLContainer
+
+MySQL singleton container based on Testcontainers. Starts only once per test process, shared across all test classes.
+
+[source,java]
+----
+class MysqlIntegrationTest {
+    @Container
+    static MySQLContainer<?> mysql = SharedMySQLContainer.getInstance();
+
+    @Test
+    void shouldConnect() {
+        String jdbcUrl = mysql.getJdbcUrl();
+        // Connect to database using jdbcUrl
+    }
+}
+----
+
+=== SharedPostgreSQLContainer
+
+PostgreSQL singleton container.
+
+[source,java]
+----
+class PostgresIntegrationTest {
+    @Container
+    static PostgreSQLContainer<?> postgres = SharedPostgreSQLContainer.getInstance();
+}
+----
+
+=== SharedClickHouseContainer
+
+ClickHouse singleton container.
+
+[source,java]
+----
+class ClickHouseIntegrationTest {
+    @Container
+    static ClickHouseContainer clickhouse = SharedClickHouseContainer.getInstance();
+}
+----
+
+=== Container Singleton Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`SharedMySQLContainer`
+|MySQL singleton container
+
+|`SharedPostgreSQLContainer`
+|PostgreSQL singleton container
+
+|`SharedClickHouseContainer`
+|ClickHouse singleton container
+|===

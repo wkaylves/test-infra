@@ -1,0 +1,157 @@
+== Spring MVC 模块
+
+`test-infra-spring-mvc` 提供 Spring MVC / Spring Boot 测试基类，含 JUnit5 与 Spock 入口。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:{infraVersion}'
+----
+
+=== BaseControllerTest（JUnit5）
+
+JUnit5 MockMvc 快捷入口，封装了 GET/POST/PUT/DELETE 请求方法和响应断言。
+
+[source,java]
+----
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
+
+    @Test
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrder() {
+        String body = "{\"orderNo\":\"ORD-002\"}";
+        MvcTestResult result = performPost("/api/orders", body);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
+    }
+
+    @Test
+    void shouldUpdateOrder() {
+        String body = "{\"orderNo\":\"ORD-003\"}";
+        MvcTestResult result = performPut("/api/orders/1", body);
+        assertThat(result.assert2xx()).isNotNull();
+    }
+
+    @Test
+    void shouldDeleteOrder() {
+        MvcTestResult result = performDelete("/api/orders/1");
+        assertThat(result.assert2xx()).isNotNull();
+    }
+}
+----
+
+=== 请求头支持
+
+所有请求方法支持传入自定义请求头：
+
+[source,java]
+----
+@Test
+void shouldReturnOrderWithTraceId() {
+    Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+    MvcTestResult result = performGet("/api/orders/1", headers);
+    assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+}
+----
+
+=== 查询参数支持
+
+[source,java]
+----
+@Test
+void shouldSearchOrders() {
+    Map<String, String> params = new HashMap<>();
+    params.put("keyword", "java");
+    params.put("page", "1");
+    MvcTestResult result = performGet("/api/orders/search", null, params);
+    assertThat(result.readString("$.keyword")).isEqualTo("java");
+}
+----
+
+=== BaseControllerSpec（Spock）
+
+Spock MockMvc 快捷入口，与 `BaseControllerTest` 功能对齐。
+
+[source,groovy,subs="attributes+"]
+----
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
+
+    def "should return order"() {
+        when:
+        def result = performGet("/api/orders/1")
+
+        then:
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
+    }
+}
+----
+
+=== MvcTestResult
+
+MockMvc 响应包装类，提供链式断言能力：
+
+- `assert2xx()` — 断言 HTTP 2xx 状态码
+- `assertStatus(int)` — 断言指定状态码
+- `readString(String)` — 读取 JsonPath 对应的字符串值
+- `readInt(String)` — 读取 JsonPath 对应的整数值
+- `matchJsonPath(String, Matcher)` — 使用 Hamcrest Matcher 匹配
+
+=== BaseIntegrationTest / BaseIntegrationSpec
+
+Spring Boot 集成测试注解，用于需要完整 Spring 上下文的集成测试场景。
+
+[source,java]
+----
+@SpringBootTest
+class OrderIntegrationTest extends BaseIntegrationTest {
+    @Autowired
+    private OrderService orderService;
+
+    @Test
+    void shouldCreateOrder() {
+        // 完整 Spring 上下文测试
+    }
+}
+----
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`BaseControllerTest`
+|JUnit5 MockMvc 快捷入口
+
+|`BaseControllerSpec`
+|Spock MockMvc 快捷入口
+
+|`MvcTestResult`
+|MockMvc 响应包装（含状态码 + JsonPathMatcher + 断言链）
+
+|`MvcTestException`
+|MockMvc 请求失败运行时异常
+
+|`BaseIntegrationTest`
+|Spring Boot 集成测试注解（JUnit5）
+
+|`BaseIntegrationSpec`
+|Spring Boot 集成测试入口（Spock）
+|===

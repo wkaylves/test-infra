@@ -1,0 +1,52 @@
+== RPC Mock 模块
+
+`test-infra-rpc-mock` 提供 Dubbo / gRPC mock 辅助。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-rpc-mock:{infraVersion}'
+----
+
+=== DubboTestBase
+
+Dubbo mock 基类，提供 Dubbo 服务的测试支持。
+
+[source,java]
+----
+class OrderServiceDubboTest extends DubboTestBase {
+    @Test
+    void shouldCallDubboService() {
+        // Dubbo mock 测试
+    }
+}
+----
+
+=== GrpcTestBase
+
+gRPC mock 基类，提供 gRPC 服务的测试支持。
+
+[source,java]
+----
+class OrderServiceGrpcTest extends GrpcTestBase {
+    @Test
+    void shouldCallGrpcService() {
+        // gRPC mock 测试
+    }
+}
+----
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`DubboTestBase`
+|Dubbo mock 基类
+
+|`GrpcTestBase`
+|gRPC mock 基类
+|===

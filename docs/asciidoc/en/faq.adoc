@@ -1,0 +1,39 @@
+== FAQ
+
+=== How to choose a test base class?
+
+- **Service unit tests**: Use `@ExtendWith(MockitoExtension.class)` directly; extend `BaseJUnit5Test` for soft assertions.
+- **Controller tests**: Use `BaseControllerTest` (JUnit5) or `BaseControllerSpec` (Spock).
+- **Mapper tests**: Use `@BaseH2MapperTest` for quick path; `BaseMysqlContainerMapperTest` for MySQL compatibility.
+- **Integration tests**: Extend `BaseIntegrationTest` (JUnit5) or `BaseIntegrationSpec` (Spock).
+
+=== H2 vs MySQL Container — which to choose?
+
+- **H2 slice**: Fast startup, ideal for daily development and CI pipelines. Does not support MySQL-specific syntax (e.g., `ON DUPLICATE KEY UPDATE`).
+- **MySQL Container**: Slower startup (~10-30s), but provides real MySQL compatibility. Best for validating MySQL-specific syntax or stored procedures.
+
+=== How to mock external HTTP services?
+
+Extend `WireMockTestBase` (JUnit5) or `BaseWireMockSpec` (Spock), and use `stubGet()` / `stubPost()` in `setupStubs()` to preset responses.
+
+=== How to mock Redis / RocketMQ?
+
+Use utility classes directly, no base class inheritance needed:
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+RocketMQTemplate mqTemplate = MockRocketMQUtils.mockRocketMQTemplate();
+----
+
+=== How do singleton containers work?
+
+All `Shared*Container` classes use Testcontainers' singleton container pattern. The container starts only once per JVM process, shared across all test classes. This avoids the overhead of starting/tearing down containers for each test class.
+
+=== Why not use Testcontainers directly?
+
+test-infra adds on top of Testcontainers:
+- Singleton container management (avoids repeated startup)
+- Unified test base classes and annotations
+- Codified team testing conventions
+- Seamless integration with Spring Boot testing

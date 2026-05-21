@@ -1,0 +1,97 @@
+== ORM Module
+
+`test-infra-orm` provides ORM test support, including MyBatis and JPA sub-modules.
+
+=== test-infra-mybatis
+
+MyBatis mapper tests with H2 slice and MySQL container paths.
+
+==== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-mybatis:{infraVersion}'
+----
+
+==== H2 Slice Path (Quick Path)
+
+Uses in-memory H2 database with fast startup, ideal for daily development.
+
+[source,java]
+----
+@BaseH2MapperTest
+@Sql({"classpath:schema.sql", "classpath:data.sql"})
+class UserMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+
+    @Test
+    void shouldInsert() {
+        User user = new User();
+        user.setName("Alice");
+        user.setAge(25);
+        int rows = userMapper.insert(user);
+        assertThat(rows).isEqualTo(1);
+    }
+}
+----
+
+==== MySQL Container Path
+
+For real MySQL compatibility, use the container path based on Testcontainers.
+
+[source,java]
+----
+class UserMapperMysqlTest extends BaseMysqlContainerMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+}
+----
+
+==== MockMyBatisUtils
+
+MyBatis mapper mock utility for pure Mockito scenarios.
+
+[source,java]
+----
+OrderMapper mapper = MockMyBatisUtils.mockMapper(OrderMapper.class);
+when(mapper.findById(1L)).thenReturn(new Order());
+----
+
+=== test-infra-jpa
+
+JPA repository test entry point.
+
+==== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-jpa:{infraVersion}'
+----
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`BaseH2MapperTest`
+|MyBatis + H2 slice test annotation
+
+|`BaseMysqlContainerMapperTest`
+|MyBatis + MySQL Testcontainers base class
+
+|`MockMyBatisUtils`
+|MyBatis mapper mock utility
+|===

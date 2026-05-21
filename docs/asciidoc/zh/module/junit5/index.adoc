@@ -1,0 +1,45 @@
+== JUnit5 模块
+
+`test-infra-junit5` 提供纯 JUnit5 层面的通用扩展或约定。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-junit5:{infraVersion}'
+----
+
+=== BaseJUnit5Test
+
+JUnit5 测试基座，自动注入 AssertJ Soft Assertions。继承此类即可在测试方法中使用 `softly` 字段进行软断言。
+
+[source,java]
+----
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest extends BaseJUnit5Test {
+    @Mock
+    private OrderRepository orderRepository;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    @Test
+    void shouldVerifyMultipleFields() {
+        Order order = new Order();
+        order.setOrderNo("ORD-001");
+        order.setCustomerName("Alice");
+
+        when(orderRepository.save(any())).thenReturn(order);
+
+        Order result = orderService.createOrder(order);
+
+        softly.assertThat(result.getOrderNo()).isEqualTo("ORD-001");
+        softly.assertThat(result.getCustomerName()).isEqualTo("Alice");
+    }
+}
+----
+
+[TIP]
+====
+纯 Mockito 场景仍可直接使用原生 `@ExtendWith(MockitoExtension.class)`，无需继承基类。
+====

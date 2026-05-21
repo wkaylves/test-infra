@@ -1,0 +1,80 @@
+== Core 模块
+
+`test-infra-core` 提供通用测试工具类，是其他模块的基础依赖。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-core:{infraVersion}'
+----
+
+=== PageBuilder
+
+构造分页测试数据，支持自定义页码、每页条数和总数。
+
+[source,java]
+----
+// 构造一个分页结果
+PageInfo<User> page = PageBuilder.of(1, 10, 100)
+    .data(userList)
+    .build();
+----
+
+=== ResultBuilder
+
+构造统一响应测试数据，模拟业务系统返回的 Result 包装。
+
+[source,java]
+----
+// 构造成功响应
+Result<User> success = ResultBuilder.success(user);
+
+// 构造失败响应
+Result<User> fail = ResultBuilder.fail("USER_NOT_FOUND", "用户不存在");
+----
+
+=== JsonPathMatcher
+
+JSON 响应断言工具，用于 MockMvc 或 HTTP 响应的 JsonPath 匹配。
+
+[source,java]
+----
+// 在 MockMvc 测试中使用
+MvcTestResult result = performGet("/api/users/1");
+result.assert2xx()
+    .matchJsonPath("$.name", equalTo("Alice"))
+    .matchJsonPath("$.age", greaterThan(18));
+----
+
+=== TestData
+
+常见 Map 测试数据工厂，快速构造测试输入。
+
+[source,java]
+----
+Map<String, Object> data = TestData.builder()
+    .put("name", "Alice")
+    .put("age", 25)
+    .build();
+----
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`PageBuilder`
+|构造分页测试数据
+
+|`ResultBuilder`
+|构造统一响应测试数据
+
+|`JsonPathMatcher`
+|JSON 响应断言
+
+|`TestData`
+|常见 Map 测试数据
+|===

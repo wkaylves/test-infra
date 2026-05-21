@@ -1,0 +1,41 @@
+== Schedule Mock Module
+
+`test-infra-schedule-mock` provides XXL-Job / Quartz test silencing configuration.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-schedule-mock:{infraVersion}'
+----
+
+=== @XxlJobTestBase
+
+XXL-Job test annotation that empties the XXL-Job admin address, preventing connections to remote scheduling centers during tests.
+
+[source,java]
+----
+@XxlJobTestBase
+class MyXxlJobTest {
+    @Test
+    void shouldRunJob() {
+        // XXL-Job admin address emptied, Quartz auto-startup=false
+        // Can safely test Job Handler logic
+    }
+}
+----
+
+=== Quartz Silencing
+
+When using `@XxlJobTestBase`, Quartz `auto-startup` is set to `false`, preventing scheduled tasks from automatically executing during tests.
+
+=== Utility Class Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`@XxlJobTestBase`
+|XXL-Job test annotation
+|===

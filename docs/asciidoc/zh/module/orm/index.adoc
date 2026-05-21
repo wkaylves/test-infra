@@ -1,0 +1,97 @@
+== ORM 模块
+
+`test-infra-orm` 提供 ORM 测试支持，包含 MyBatis 和 JPA 两个子模块。
+
+=== test-infra-mybatis
+
+MyBatis mapper 测试，含 H2 slice 与 MySQL container 路径。
+
+==== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-mybatis:{infraVersion}'
+----
+
+==== H2 Slice 路径（快速路径）
+
+使用内存数据库 H2，启动速度快，适合日常开发。
+
+[source,java]
+----
+@BaseH2MapperTest
+@Sql({"classpath:schema.sql", "classpath:data.sql"})
+class UserMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+
+    @Test
+    void shouldInsert() {
+        User user = new User();
+        user.setName("Alice");
+        user.setAge(25);
+        int rows = userMapper.insert(user);
+        assertThat(rows).isEqualTo(1);
+    }
+}
+----
+
+==== MySQL Container 路径
+
+需要真实 MySQL 兼容性时使用容器路径，基于 Testcontainers。
+
+[source,java]
+----
+class UserMapperMysqlTest extends BaseMysqlContainerMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+}
+----
+
+==== MockMyBatisUtils
+
+MyBatis mapper mock 工具，纯 Mockito 场景使用。
+
+[source,java]
+----
+OrderMapper mapper = MockMyBatisUtils.mockMapper(OrderMapper.class);
+when(mapper.findById(1L)).thenReturn(new Order());
+----
+
+=== test-infra-jpa
+
+JPA repository 测试入口。
+
+==== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-jpa:{infraVersion}'
+----
+
+=== 核心工具类一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`BaseH2MapperTest`
+|MyBatis + H2 slice 测试注解
+
+|`BaseMysqlContainerMapperTest`
+|MyBatis + MySQL Testcontainers 基类
+
+|`MockMyBatisUtils`
+|MyBatis mapper mock 工具
+|===

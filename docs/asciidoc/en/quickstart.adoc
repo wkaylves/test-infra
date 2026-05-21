@@ -1,0 +1,209 @@
+== Quick Start
+
+=== Choose Dependencies
+
+[source,groovy,subs="attributes+"]
+----
+// Controller / Spring Boot integration tests
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:{infraVersion}'
+
+// MyBatis mapper tests
+testImplementation 'io.github.wkaylves:test-infra-mybatis:{infraVersion}'
+
+// External HTTP dependency isolation
+testImplementation 'io.github.wkaylves:test-infra-http-mock:{infraVersion}'
+
+// Redis / RocketMQ mock utilities
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:{infraVersion}'
+testImplementation 'io.github.wkaylves:test-infra-mq-broker:{infraVersion}'
+
+// Full integration
+testImplementation 'io.github.wkaylves:test-infra-all:{infraVersion}'
+----
+
+=== Service Unit Tests
+
+Service unit tests are lightweight by default, without starting a Spring container. Extend `BaseJUnit5Test` to get AssertJ Soft Assertions auto-injection, suitable for scenarios requiring multiple field assertions at once. Pure Mockito scenarios can still use native `@ExtendWith(MockitoExtension.class)` directly.
+
+[source,java]
+----
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest extends BaseJUnit5Test {
+    @Mock
+    private OrderRepository orderRepository;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    @Test
+    void shouldFindOrder() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setOrderNo("ORD-001");
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        Optional<Order> result = orderService.findOrder(1L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getOrderNo()).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldVerifyMultipleFieldsSoftly() {
+        Order order = new Order();
+        order.setOrderNo("ORD-002");
+        order.setCustomerName("Bob");
+
+        when(orderRepository.save(any())).thenReturn(order);
+
+        Order result = orderService.createOrder(order);
+        softly.assertThat(result.getOrderNo()).isEqualTo("ORD-002");
+        softly.assertThat(result.getCustomerName()).isEqualTo("Bob");
+    }
+}
+----
+
+=== Controller Tests
+
+Controller tests belong to `test-infra-spring-mvc`, using `BaseControllerTest` and `MvcTestResult`.
+
+[source,java]
+----
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
+    @Test
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrderWithHeader() {
+        Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+        MvcTestResult result = performPost("/api/orders", requestBody, headers);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
+    }
+}
+----
+
+Spock entry point provided by the same component:
+
+[source,groovy]
+----
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
+    def "should return order"() {
+        when:
+        def result = performGet("/api/orders/1")
+
+        then:
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
+    }
+}
+----
+
+=== MyBatis Mapper Tests
+
+Mapper tests belong to `test-infra-orm:test-infra-mybatis`. Quick path uses H2 slice:
+
+[source,java]
+----
+@BaseH2MapperTest
+@Sql({"classpath:schema.sql", "classpath:data.sql"})
+class UserMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+}
+----
+
+For real MySQL compatibility, use the container path:
+
+[source,java]
+----
+class UserMapperMysqlTest extends BaseMysqlContainerMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+}
+----
+
+=== HTTP Mock
+
+External HTTP dependency isolation belongs to `test-infra-http-mock`.
+
+[source,java]
+----
+class MyFeignTest extends WireMockTestBase {
+    @Override
+    protected void setupStubs() {
+        stubGet("/api/external/users")
+                .queryParam("status", "ACTIVE")
+                .requestHeader("X-Trace-Id", "test-trace")
+                .header("X-Mock", "wiremock")
+                .body("[{\"id\":1,\"name\":\"Alice\"}]")
+                .stub();
+    }
+
+    @Test
+    void shouldCallExternalApi() {
+        String baseUrl = getBaseUrl();
+        // Point client to baseUrl and make the call
+    }
+}
+----
+
+Spock entry point:
+
+[source,groovy]
+----
+class MyFeignSpec extends BaseWireMockSpec {
+    def setupSpec() {
+        stubGet('/api/external/ping')
+                .textBody('pong')
+                .contentType('text/plain')
+                .stub()
+    }
+
+    def "should call external api"() {
+        expect:
+        getBaseUrl()
+    }
+}
+----
+
+=== Middleware Mock
+
+Common middleware mocks are provided as utility classes, avoiding base class inheritance just for mocking.
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+RocketMQTemplate mqTemplate = MockRocketMQUtils.mockRocketMQTemplate();
+OrderMapper mapper = MockMyBatisUtils.mockMapper(OrderMapper.class);
+----
+
+=== Scheduling Silencing
+
+Scheduling tests belong to `test-infra-schedule-mock`.
+
+[source,java]
+----
+@XxlJobTestBase
+class MyXxlJobTest {
+    // XXL-Job admin address emptied, Quartz auto-startup=false
+}
+----

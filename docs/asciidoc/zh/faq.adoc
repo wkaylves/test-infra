@@ -1,0 +1,39 @@
+== 常见问题
+
+=== 如何选择测试基类？
+
+- **Service 单测**：直接使用 `@ExtendWith(MockitoExtension.class)`，需要软断言时继承 `BaseJUnit5Test`。
+- **Controller 测试**：使用 `BaseControllerTest`（JUnit5）或 `BaseControllerSpec`（Spock）。
+- **Mapper 测试**：快速路径用 `@BaseH2MapperTest`，需要 MySQL 兼容性用 `BaseMysqlContainerMapperTest`。
+- **集成测试**：继承 `BaseIntegrationTest`（JUnit5）或 `BaseIntegrationSpec`（Spock）。
+
+=== H2 和 MySQL Container 路径如何选择？
+
+- **H2 slice**：启动快，适合日常开发和 CI 流水线。不支持 MySQL 特有语法（如 `ON DUPLICATE KEY UPDATE`）。
+- **MySQL Container**：启动慢（约 10-30 秒），但提供真实 MySQL 兼容性。适合需要验证 MySQL 特有语法或存储过程的场景。
+
+=== 如何 mock 外部 HTTP 服务？
+
+继承 `WireMockTestBase`（JUnit5）或 `BaseWireMockSpec`（Spock），在 `setupStubs()` 中使用 `stubGet()` / `stubPost()` 预置响应。
+
+=== 如何 mock Redis / RocketMQ？
+
+使用工具类方式，无需继承基类：
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+RocketMQTemplate mqTemplate = MockRocketMQUtils.mockRocketMQTemplate();
+----
+
+=== 容器单例是如何工作的？
+
+所有 `Shared*Container` 使用 Testcontainers 的 singleton container 模式。在整个 JVM 进程中只启动一次容器，所有测试类共享同一个实例。这避免了每个测试类都启动/销毁容器的开销。
+
+=== 为什么不直接使用 Testcontainers？
+
+test-infra 在 Testcontainers 之上提供了：
+- 单例容器管理（避免重复启动）
+- 统一的测试基类和注解
+- 团队约定的测试写法沉淀
+- 与 Spring Boot 测试的无缝集成

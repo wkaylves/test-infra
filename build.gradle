@@ -3,11 +3,95 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+
+    //asciidoc plugins
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'org.asciidoctor.jvm.pdf' version '3.3.2'
 }
+
+// ---- Asciidoctor documentation build ----
+ext {
+    springAsciidoctorVersion = '0.0.5'
+    pdfBuildPath = "$buildDir/asciidoc/pdf"
+    htmlBuildPath = "$buildDir/asciidoc/html"
+}
+
+apply plugin: "distribution"
+
+configurations {
+    asciidoctorExtensions
+}
+
+dependencies {
+    asciidoctorExtensions "io.spring.asciidoctor.backends:spring-asciidoctor-backends:${springAsciidoctorVersion}"
+}
+
+asciidoctor {
+    sourceDir = file("docs/asciidoc")
+    baseDirFollowsSourceDir()
+    sources {
+        include '**/index.adoc'
+    }
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+        }
+    }
+    outputDir file("${htmlBuildPath}")
+    configurations "asciidoctorExtensions"
+    outputOptions {
+        backends "spring-html"
+    }
+}
+
+asciidoctor.doLast {
+    delete file("${htmlBuildPath}/img/banner-logo.svg")
+    copy {
+        from file("${htmlBuildPath}/images/banner-logo.svg")
+        into file("${htmlBuildPath}/img")
+    }
+    // GitHub Pages: prevent Jekyll processing
+    file("${htmlBuildPath}/.nojekyll").text = ""
+}
+
+asciidoctorj {
+    options header_footer: true
+    attributes 'icons@': 'font'
+}
+
+asciidoctorPdf {
+    sourceDir = file("docs/asciidoc/zh")
+    baseDirFollowsSourceDir()
+    sources {
+        include 'index.adoc'
+    }
+    resources {
+        from(file("docs/asciidoc")) {
+            include 'images/**'
+        }
+    }
+    outputDir file("${pdfBuildPath}")
+    doLast {
+        delete file("${pdfBuildPath}/${project.name}.pdf")
+        copy {
+            from "$pdfBuildPath"
+            into "$pdfBuildPath"
+            rename { String fileName -> fileName.replace('index.pdf', project.name + ".pdf") }
+        }
+        delete file("$pdfBuildPath/index.pdf")
+    }
+}
+
+task asciidocIndex(type: Tar) {
+    description '打包 html 及 pdf'
+    dependsOn asciidoctor
+}
+
+// ---- End Asciidoctor ----
 
 allprojects {
     group = 'io.github.wkaylves'
-    version = '1.0.0-SNAPSHOT'
+    version = '1.0.0'
 
     repositories {
         mavenLocal()
@@ -73,16 +157,12 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    // 如果是 Groovy DSL (build.gradle)
     tasks.withType(Javadoc) {
         options {
-            // 允许缺失注释，不将其视为警告或错误
             encoding = "UTF-8"
             charSet = "UTF-8"
-            // 关闭 doclint 的 missing 检查（或者直接传入 'none' 关闭全部检查）
             addStringOption('Xdoclint:none', '-quiet')
         }
-        // 如果这些警告导致了构建失败，强制让任务在有警告时也能成功
         failOnError = false
     }
 }

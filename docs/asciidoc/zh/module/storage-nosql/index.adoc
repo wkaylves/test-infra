@@ -1,0 +1,78 @@
+== NoSQL 存储模块
+
+`test-infra-storage-nosql` 提供 Redis / MongoDB / Neo4j 容器与 mock 工具。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:{infraVersion}'
+----
+
+=== 容器支持
+
+==== SharedRedisContainer
+
+Redis 单例容器。
+
+[source,java]
+----
+class RedisIntegrationTest {
+    @Container
+    static GenericContainer<?> redis = SharedRedisContainer.getInstance();
+}
+----
+
+==== SharedMongoDBContainer
+
+MongoDB 单例容器。
+
+[source,java]
+----
+class MongoIntegrationTest {
+    @Container
+    static MongoDBContainer mongo = SharedMongoDBContainer.getInstance();
+}
+----
+
+==== SharedNeo4jContainer
+
+Neo4j 单例容器。
+
+[source,java]
+----
+class Neo4jIntegrationTest {
+    @Container
+    static Neo4jContainer<?> neo4j = SharedNeo4jContainer.getInstance();
+}
+----
+
+=== MockRedisUtils
+
+Redis mock 工具，纯 Mockito 场景使用，无需启动容器。
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+// 使用 redisTemplate 进行测试
+----
+
+=== 容器单例一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`SharedRedisContainer`
+|Redis 单例容器
+
+|`SharedMongoDBContainer`
+|MongoDB 单例容器
+
+|`SharedNeo4jContainer`
+|Neo4j 单例容器
+
+|`MockRedisUtils`
+|Redis mock 工具
+|===

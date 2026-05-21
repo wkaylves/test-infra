@@ -1,0 +1,93 @@
+== 消息队列模块
+
+`test-infra-mq-broker` 提供 RabbitMQ / Kafka / RocketMQ / Pulsar 容器与 mock 工具。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-mq-broker:{infraVersion}'
+----
+
+=== 容器支持
+
+==== SharedRabbitMQContainer
+
+RabbitMQ 单例容器。
+
+[source,java]
+----
+class RabbitMqIntegrationTest {
+    @Container
+    static RabbitMQContainer rabbit = SharedRabbitMQContainer.getInstance();
+}
+----
+
+==== SharedKafkaContainer
+
+Kafka 单例容器。
+
+[source,java]
+----
+class KafkaIntegrationTest {
+    @Container
+    static KafkaContainer kafka = SharedKafkaContainer.getInstance();
+}
+----
+
+==== SharedRocketMQContainer
+
+RocketMQ 单例容器。
+
+[source,java]
+----
+class RocketMqIntegrationTest {
+    @Container
+    static GenericContainer<?> rocketmq = SharedRocketMQContainer.getInstance();
+}
+----
+
+==== SharedPulsarContainer
+
+Pulsar 单例容器。
+
+[source,java]
+----
+class PulsarIntegrationTest {
+    @Container
+    static PulsarContainer pulsar = SharedPulsarContainer.getInstance();
+}
+----
+
+=== MockRocketMQUtils
+
+RocketMQ mock 工具，纯 Mockito 场景使用。
+
+[source,java]
+----
+RocketMQTemplate mqTemplate = MockRocketMQUtils.mockRocketMQTemplate();
+// 使用 mqTemplate 进行测试
+----
+
+=== 容器单例一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`SharedRabbitMQContainer`
+|RabbitMQ 单例容器
+
+|`SharedKafkaContainer`
+|Kafka 单例容器
+
+|`SharedRocketMQContainer`
+|RocketMQ 单例容器
+
+|`SharedPulsarContainer`
+|Pulsar 单例容器
+
+|`MockRocketMQUtils`
+|RocketMQ mock 工具
+|===

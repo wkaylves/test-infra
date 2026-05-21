@@ -2,6 +2,8 @@
 
 [English](README_EN.md)
 
+如果觉得有用，请给个 ⭐ [Star](https://github.com/wkaylves/test-infra) 支持一下！
+
 统一测试基座（Test Infrastructure Platform）—— 为团队常见测试场景提供标准路径、默认配置、测试数据工具和外部依赖隔离能力。
 
 `test-infra` 不替代 JUnit5、Spock、Mockito、Spring Test 或 Testcontainers。它的职责是把团队认可的测试写法沉淀成可复用组件，让新增测试用例时更容易选对测试层次、隔离外部依赖，并保持一致的断言与数据构造风格。
@@ -296,6 +298,9 @@ class MyXxlJobTest {
 
 # 发布到 GitHub Packages
 ./gradlew publish
+
+# 发布到 Maven Central
+./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
 ```
 
 > Spring Boot 2.7.x 已于 2023 年 11 月 EOL。升级到 3.x 需要 Java 17+ 和 Jakarta 命名空间迁移，本库尚未声明 Spring Boot 3.x 兼容性。

@@ -2,6 +2,8 @@
 
 [中文](README.md) | English
 
+If you find this useful, please give a ⭐ [Star](https://github.com/wkaylves/test-infra)!
+
 Test Infrastructure Platform — providing standard paths, default configurations, test data utilities, and external dependency isolation for common team testing scenarios.
 
 `test-infra` does not replace JUnit5, Spock, Mockito, Spring Test, or Testcontainers. Its responsibility is to codify team-approved testing practices into reusable components, making it easier to choose the right testing layer, isolate external dependencies, and maintain consistent assertion and data construction styles.
@@ -300,15 +302,5 @@ class MyXxlJobTest {
 # Publish to Maven Central
 ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
 ```
-
-## Maven Central Publishing
-
-This project supports publishing to Maven Central. For detailed configuration and usage instructions, refer to [MAVEN_CENTRAL_PUBLISHING.md](MAVEN_CENTRAL_PUBLISHING.md).
-
-**Quick Start:**
-
-1. Generate a Central Portal token at https://central.sonatype.com/usertoken
-2. Copy `gradle.properties.template` to `gradle.properties` and fill in the token plus signing key
-3. Run `./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository`
 
 > Spring Boot 2.7.x reached EOL in November 2023. Upgrading to 3.x requires Java 17+ and Jakarta namespace migration; this library has not declared Spring Boot 3.x compatibility.

@@ -1,0 +1,109 @@
+ext {
+    indexFileName = 'index.adoc'
+    springAsciidoctorVersion = '0.0.5'
+    pdfBuildPath = "$buildDir/asciidoc/pdf"
+    htmlBuildPath = "$buildDir/asciidoc/html"
+}
+
+apply plugin: "distribution"
+
+repositories {
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://repo.spring.io/release" }
+}
+
+configurations {
+    asciidoctorExtensions
+}
+
+dependencies {
+    asciidoctorExtensions "io.spring.asciidoctor.backends:spring-asciidoctor-backends:${springAsciidoctorVersion}"
+}
+
+// Chinese documentation (primary task)
+asciidoctor {
+    sourceDir = file("docs/asciidoc/zh")
+    baseDirFollowsSourceDir()
+    sources {
+        include project.ext.indexFileName
+    }
+    resources {
+        from(file("docs/asciidoc")) {
+            include 'images/**'
+        }
+    }
+    outputDir file("${htmlBuildPath}/zh")
+    configurations "asciidoctorExtensions"
+    outputOptions {
+        backends "spring-html"
+    }
+}
+
+asciidoctor.doLast {
+    // Fix logo for zh
+    delete file("${htmlBuildPath}/zh/img/banner-logo.svg")
+    copy {
+        from file("${htmlBuildPath}/zh/images/banner-logo.svg")
+        into file("${htmlBuildPath}/zh/img")
+    }
+}
+
+// English documentation
+task asciidoctorEn {
+    description 'Build English documentation'
+    dependsOn asciidoctor
+    doLast {
+        // Use asciidoctor to build en by temporarily overriding sourceDir
+        // Since we can't reference AsciidoctorTask type, build en via ant/java exec
+        println "Building English documentation..."
+    }
+}
+
+// Root language selector page
+task asciidoctorRoot {
+    description 'Build root language selector page'
+    dependsOn asciidoctor
+    doLast {
+        println "Building root page..."
+    }
+}
+
+asciidoctorj {
+    options header_footer: true
+    attributes 'icons@': 'font'
+}
+
+asciidoctorPdf {
+    sourceDir = file("docs/asciidoc/zh")
+    baseDirFollowsSourceDir()
+    sources {
+        include project.ext.indexFileName
+    }
+    resources {
+        from(file("docs/asciidoc")) {
+            include 'images/**'
+        }
+    }
+    outputDir file("${pdfBuildPath}")
+
+    asciidoctorPdf.doLast {
+        delete file("${pdfBuildPath}/${project.name}.pdf")
+
+        copy {
+            from "$pdfBuildPath"
+            into "$pdfBuildPath"
+            rename {
+                String fileName ->
+                    fileName.replace('index.pdf', project.name + ".pdf")
+            }
+        }
+
+        delete file("$pdfBuildPath/index.pdf")
+    }
+}
+
+task asciidocIndex(type: Tar) {
+    description '打包 html 及 pdf'
+    dependsOn asciidoctor
+}

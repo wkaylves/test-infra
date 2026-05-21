@@ -1,0 +1,35 @@
+== Spock 模块
+
+`test-infra-spock` 提供 Spock 基类和通用 helper。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-spock:{infraVersion}'
+----
+
+=== 使用方式
+
+Spock 模块提供的基类与 JUnit5 模块对齐，但使用 Groovy/Spock 语法。主要能力包括：
+
+- 软断言支持
+- 通用测试数据构造
+- 与 Spring MVC、HTTP Mock 等模块的 Spock 入口配合使用
+
+[source,groovy,subs="attributes+"]
+----
+class UserServiceSpec extends BaseSpec {
+    def "should create user"() {
+        given:
+        def user = new User(name: "Alice", age: 25)
+
+        when:
+        def result = userService.create(user)
+
+        then:
+        result.name == "Alice"
+        result.age == 25
+    }
+}
+----

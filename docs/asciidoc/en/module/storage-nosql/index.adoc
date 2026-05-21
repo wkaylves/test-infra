@@ -1,0 +1,78 @@
+== NoSQL Storage Module
+
+`test-infra-storage-nosql` provides Redis / MongoDB / Neo4j containers and mock utilities.
+
+=== Maven Coordinates
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:{infraVersion}'
+----
+
+=== Container Support
+
+==== SharedRedisContainer
+
+Redis singleton container.
+
+[source,java]
+----
+class RedisIntegrationTest {
+    @Container
+    static GenericContainer<?> redis = SharedRedisContainer.getInstance();
+}
+----
+
+==== SharedMongoDBContainer
+
+MongoDB singleton container.
+
+[source,java]
+----
+class MongoIntegrationTest {
+    @Container
+    static MongoDBContainer mongo = SharedMongoDBContainer.getInstance();
+}
+----
+
+==== SharedNeo4jContainer
+
+Neo4j singleton container.
+
+[source,java]
+----
+class Neo4jIntegrationTest {
+    @Container
+    static Neo4jContainer<?> neo4j = SharedNeo4jContainer.getInstance();
+}
+----
+
+=== MockRedisUtils
+
+Redis mock utility for pure Mockito scenarios, no container needed.
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+// Use redisTemplate for testing
+----
+
+=== Container Singleton Summary
+
+[cols="2,3",options="header"]
+|===
+|Class
+|Description
+
+|`SharedRedisContainer`
+|Redis singleton container
+
+|`SharedMongoDBContainer`
+|MongoDB singleton container
+
+|`SharedNeo4jContainer`
+|Neo4j singleton container
+
+|`MockRedisUtils`
+|Redis mock utility
+|===

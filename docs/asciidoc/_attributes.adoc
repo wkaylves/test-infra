@@ -1,0 +1,57 @@
+:icons: font
+:docinfo: shared,private
+:logo: images/banner-logo.svg
+:logo-link: {repoBaseUrl}
+:idprefix:
+:idseparator: -
+:numbered:
+:hide-uri-scheme:
+:doctype: book
+:imagesdir: images
+:toc: left
+:toclevels: 5
+:toc-devOpsProjectTitle: 目录
+:preface-devOpsProjectTitle: 前言
+:chapter-label:
+:sectanchors:
+:sectnums:
+:sectnumlevels: 5
+:source-highlighter: rouge
+:figure-caption!:
+:pdf-theme: sc
+:pdf-fontsdir: fonts
+:pdf-themesdir: themes
+:pdf-page-size: A4
+:pdf-chapter-label: 章
+:version-label: V
+
+:experimental:
+:base_dir: ..
+:project_dir: {base_dir}
+
+:appendix-caption: 附录
+:last-update-label: 最后更新时间
+:note-caption: 笔记
+:caution-caption: 注意
+:important-caption: 重要
+:tip-caption: 提示
+:warning-caption: 警告
+:version-label: 版本
+:untitled-label: 暂无标题
+
+ifdef::preface-devOpsProjectTitle[:preface-devOpsProjectTitle: 序言]
+
+:listing-caption: 代码
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>以下是变量可以新增、修改>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// user-defined attributes
+:infraVersion: 1.0.0
+//>>>
+:mavenGroupId: io.github.wkaylves
+:mavenBaseUrl: https://central.sonatype.com/artifact/{mavenGroupId}
+
+:javaDocBaseUrl: https://javadoc.io/doc/{mavenGroupId}
+
+:repoBaseUrl: https://github.com/wkaylves/test-infra

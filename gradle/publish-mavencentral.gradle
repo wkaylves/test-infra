@@ -9,7 +9,7 @@ ext {
     pomLicenseUrl = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
     pomDeveloperId = 'wkaylves'
     pomDeveloperName = 'wkaylves'
-    pomDeveloperEmail = 'wkaylves@users.noreply.github.com'
+    pomDeveloperEmail = 'kaylves@outlook.com'
     pomScmUrl = 'https://github.com/wkaylves/test-infra'
     pomScmConnection = 'scm:git:git://github.com/wkaylves/test-infra.git'
     pomScmDeveloperConnection = 'scm:git:ssh://github.com/wkaylves/test-infra.git'

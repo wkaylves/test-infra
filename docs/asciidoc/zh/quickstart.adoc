@@ -1,0 +1,209 @@
+== 快速开始
+
+=== 选择依赖
+
+[source,groovy,subs="attributes+"]
+----
+// Controller / Spring Boot 集成测试
+testImplementation 'io.github.wkaylves:test-infra-spring-mvc:{infraVersion}'
+
+// MyBatis mapper 测试
+testImplementation 'io.github.wkaylves:test-infra-mybatis:{infraVersion}'
+
+// 外部 HTTP 依赖隔离
+testImplementation 'io.github.wkaylves:test-infra-http-mock:{infraVersion}'
+
+// Redis / RocketMQ mock 工具
+testImplementation 'io.github.wkaylves:test-infra-storage-nosql:{infraVersion}'
+testImplementation 'io.github.wkaylves:test-infra-mq-broker:{infraVersion}'
+
+// 全量接入
+testImplementation 'io.github.wkaylves:test-infra-all:{infraVersion}'
+----
+
+=== Service 单测
+
+Service 单测默认保持轻量，不启动 Spring 容器。继承 `BaseJUnit5Test` 可获得 AssertJ Soft Assertions 自动注入，适合需要一次验证多个字段的场景。纯 Mockito 场景仍可直接使用原生 `@ExtendWith(MockitoExtension.class)`。
+
+[source,java]
+----
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest extends BaseJUnit5Test {
+    @Mock
+    private OrderRepository orderRepository;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    @Test
+    void shouldFindOrder() {
+        Order order = new Order();
+        order.setId(1L);
+        order.setOrderNo("ORD-001");
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        Optional<Order> result = orderService.findOrder(1L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getOrderNo()).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldVerifyMultipleFieldsSoftly() {
+        Order order = new Order();
+        order.setOrderNo("ORD-002");
+        order.setCustomerName("Bob");
+
+        when(orderRepository.save(any())).thenReturn(order);
+
+        Order result = orderService.createOrder(order);
+        softly.assertThat(result.getOrderNo()).isEqualTo("ORD-002");
+        softly.assertThat(result.getCustomerName()).isEqualTo("Bob");
+    }
+}
+----
+
+=== Controller 测试
+
+Controller 测试归属 `test-infra-spring-mvc`，使用 `BaseControllerTest` 和 `MvcTestResult`。
+
+[source,java]
+----
+@WebMvcTest(OrderController.class)
+class OrderControllerTest extends BaseControllerTest {
+    @Test
+    void shouldReturnOrder() {
+        MvcTestResult result = performGet("/api/orders/1");
+        assertThat(result.assert2xx().readString("$.orderNo")).isEqualTo("ORD-001");
+    }
+
+    @Test
+    void shouldCreateOrderWithHeader() {
+        Map<String, String> headers = Collections.singletonMap("X-Trace-Id", "test-123");
+        MvcTestResult result = performPost("/api/orders", requestBody, headers);
+        assertThat(result.assertStatus(201).readString("$.orderNo")).isEqualTo("ORD-002");
+    }
+}
+----
+
+Spock 入口由同一组件提供：
+
+[source,groovy,subs="attributes+"]
+----
+@WebMvcTest(OrderController)
+class OrderControllerSpec extends BaseControllerSpec {
+    def "should return order"() {
+        when:
+        def result = performGet("/api/orders/1")
+
+        then:
+        result.assert2xx().readString('$.orderNo') == 'ORD-001'
+    }
+
+    def "should search with query params"() {
+        when:
+        def params = [keyword: 'java']
+        def result = performGet("/api/orders/search", null, params)
+
+        then:
+        result.readString('$.keyword') == 'java'
+    }
+}
+----
+
+=== MyBatis Mapper 测试
+
+Mapper 测试归属 `test-infra-orm:test-infra-mybatis`。快速路径使用 H2 slice：
+
+[source,java]
+----
+@BaseH2MapperTest
+@Sql({"classpath:schema.sql", "classpath:data.sql"})
+class UserMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void shouldSelectById() {
+        assertThat(userMapper.findById(1L)).isNotNull();
+    }
+}
+----
+
+需要真实 MySQL 兼容性时使用容器路径：
+
+[source,java]
+----
+class UserMapperMysqlTest extends BaseMysqlContainerMapperTest {
+    @Autowired
+    private UserMapper userMapper;
+}
+----
+
+=== HTTP Mock
+
+外部 HTTP 依赖隔离归属 `test-infra-http-mock`。
+
+[source,java]
+----
+class MyFeignTest extends WireMockTestBase {
+    @Override
+    protected void setupStubs() {
+        stubGet("/api/external/users")
+                .queryParam("status", "ACTIVE")
+                .requestHeader("X-Trace-Id", "test-trace")
+                .header("X-Mock", "wiremock")
+                .body("[{\"id\":1,\"name\":\"Alice\"}]")
+                .stub();
+    }
+
+    @Test
+    void shouldCallExternalApi() {
+        String baseUrl = getBaseUrl();
+        // client 指向 baseUrl 后发起调用
+    }
+}
+----
+
+Spock 入口：
+
+[source,groovy,subs="attributes+"]
+----
+class MyFeignSpec extends BaseWireMockSpec {
+    def setupSpec() {
+        stubGet('/api/external/ping')
+                .textBody('pong')
+                .contentType('text/plain')
+                .stub()
+    }
+
+    def "should call external api"() {
+        expect:
+        getBaseUrl()
+    }
+}
+----
+
+=== 中间件 Mock
+
+常见中间件 mock 以工具类方式提供，避免为了 mock 继承基类。
+
+[source,java]
+----
+RedisTemplate<String, Object> redisTemplate = MockRedisUtils.mockRedisTemplate();
+RocketMQTemplate mqTemplate = MockRocketMQUtils.mockRocketMQTemplate();
+OrderMapper mapper = MockMyBatisUtils.mockMapper(OrderMapper.class);
+----
+
+=== 调度哑火
+
+调度测试归属 `test-infra-schedule-mock`。
+
+[source,java]
+----
+@XxlJobTestBase
+class MyXxlJobTest {
+    // XXL-Job admin 地址置空，Quartz auto-startup=false
+}
+----

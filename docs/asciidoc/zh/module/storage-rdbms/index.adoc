@@ -1,0 +1,69 @@
+== 关系型数据库存储模块
+
+`test-infra-storage-rdbms` 提供 MySQL / PostgreSQL / ClickHouse Testcontainers 支持。
+
+=== Maven 坐标
+
+[source,groovy,subs="attributes+"]
+----
+testImplementation 'io.github.wkaylves:test-infra-storage-rdbms:{infraVersion}'
+----
+
+=== SharedMySQLContainer
+
+MySQL 单例容器，基于 Testcontainers。在整个测试进程中只启动一次，所有测试类共享同一个容器实例。
+
+[source,java]
+----
+class MysqlIntegrationTest {
+    @Container
+    static MySQLContainer<?> mysql = SharedMySQLContainer.getInstance();
+
+    @Test
+    void shouldConnect() {
+        String jdbcUrl = mysql.getJdbcUrl();
+        // 使用 jdbcUrl 连接数据库
+    }
+}
+----
+
+=== SharedPostgreSQLContainer
+
+PostgreSQL 单例容器。
+
+[source,java]
+----
+class PostgresIntegrationTest {
+    @Container
+    static PostgreSQLContainer<?> postgres = SharedPostgreSQLContainer.getInstance();
+}
+----
+
+=== SharedClickHouseContainer
+
+ClickHouse 单例容器。
+
+[source,java]
+----
+class ClickHouseIntegrationTest {
+    @Container
+    static ClickHouseContainer clickhouse = SharedClickHouseContainer.getInstance();
+}
+----
+
+=== 容器单例一览
+
+[cols="2,3",options="header"]
+|===
+|类
+|说明
+
+|`SharedMySQLContainer`
+|MySQL 单例容器
+
+|`SharedPostgreSQLContainer`
+|PostgreSQL 单例容器
+
+|`SharedClickHouseContainer`
+|ClickHouse 单例容器
+|===
