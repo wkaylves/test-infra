@@ -45,10 +45,15 @@ asciidoctor {
 }
 
 asciidoctor.doLast {
-    delete file("${htmlBuildPath}/img/banner-logo.svg")
-    copy {
-        from file("${htmlBuildPath}/images/banner-logo.svg")
-        into file("${htmlBuildPath}/img")
+    def logoSrc = file("${htmlBuildPath}/images/banner-logo.svg")
+    ["", "zh", "en"].each { dir ->
+        def targetDir = file("${htmlBuildPath}/${dir}/img")
+        targetDir.mkdirs()
+        delete file("${targetDir}/banner-logo.svg")
+        copy {
+            from logoSrc
+            into targetDir
+        }
     }
     // GitHub Pages: prevent Jekyll processing
     file("${htmlBuildPath}/.nojekyll").text = ""
